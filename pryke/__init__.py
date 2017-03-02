@@ -12,7 +12,6 @@ class Pryke:
         if access_token is not None:
             self.oauth.token = access_token
             self.oauth.access_token = access_token
-            print(self.oauth.authorized)
 
         else:
             self.authorization_url, state = self.oauth.authorization_url("https://www.wrike.com/oauth2/authorize")
@@ -36,7 +35,7 @@ class Pryke:
         else:
             folder_ids = ",".join(folder_ids)
             r = self.oauth.get("https://www.wrike.com/api/v3/folders/{}".format(folder_ids))
-
+            print(r.json())
         for folder_data in r.json()['data']:
             yield Folder(data=folder_data)
 

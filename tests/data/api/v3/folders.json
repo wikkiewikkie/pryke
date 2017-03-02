@@ -1,0 +1,40 @@
+{
+  "kind": "folderTree",
+  "data": [
+    {
+      "id": "IEAGIITRI7777777",
+      "title": "Root",
+      "childIds": [
+        "IEAGIITRI4AYHYMV",
+        "IEAGIITRI4AYHYMY"
+      ],
+      "scope": "WsRoot"
+    },
+    {
+      "id": "IEAGIITRI7777776",
+      "title": "Recycle Bin",
+      "childIds": [
+      ],
+      "scope": "RbRoot"
+    },
+    {
+      "id": "IEAGIITRI4AYHYMV",
+      "title": "New title",
+      "childIds": [
+        "IEAGIITRI4AYHYMX",
+        "IEAGIITRI4AYHYMW"
+      ],
+      "scope": "WsFolder",
+      "project": {
+        "authorId": "KUAJ25LD",
+        "ownerIds": [
+          "KUAJ25LD"
+        ],
+        "status": "Green",
+        "startDate": "2016-10-03",
+        "endDate": "2016-10-10",
+        "createdDate": "2016-10-03T16:10:45Z"
+      }
+    }
+  ]
+}
