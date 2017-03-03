@@ -1,4 +1,4 @@
-from pryke import Folder, Pryke
+from pryke import Account, Contact, Folder, Pryke, Task
 
 
 #def test_pryke(mocked):
@@ -9,6 +9,21 @@ from pryke import Folder, Pryke
 #
 #    assert isinstance(p, Pryke)
 
+def test_pryke_accounts(mocked):
+    a = None
+    for account in mocked.accounts():
+        a = account
+        assert isinstance(account, Account)
+    assert a.id == "IEAGIITR"
+
+
+def test_pryke_contacts(mocked):
+    c = None
+    for contact in mocked.contacts():
+        c = contact
+        assert isinstance(contact, Contact)
+    assert c.id == "KUAJ25LD"
+
 
 def test_pryke_folders(mocked):
     f = None
@@ -17,3 +32,12 @@ def test_pryke_folders(mocked):
         assert isinstance(folder, Folder)
 
     assert f.id == "IEAGIITRI4AYHYMV"
+
+
+def test_pryke_tasks(mocked):
+    t = None
+    for task in mocked.tasks():
+        t = task
+        assert isinstance(task, Task)
+
+    assert t.id == "IEAGIITRKQAYHYM5"

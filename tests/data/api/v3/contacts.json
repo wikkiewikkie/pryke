@@ -1,0 +1,60 @@
+{
+  "kind": "contacts",
+  "data": [
+    {
+      "id": "KX7ZHLB5",
+      "firstName": "New test group",
+      "lastName": "",
+      "type": "Group",
+      "profiles": [
+        {
+          "accountId": "IEAGIITR",
+          "role": "User",
+          "external": false,
+          "admin": false,
+          "owner": false
+        }
+      ],
+      "avatarUrl": "https://www.wrike.com/avatars//29/F3/Circle_ffc43e15_78-71_v1.png",
+      "timezone": "Z",
+      "locale": "en",
+      "deleted": false,
+      "memberIds": [
+        "KUAJ25LD"
+      ],
+      "metadata": [
+        {
+          "key": "testMetaKey",
+          "value": "testMetaValue"
+        }
+      ]
+    },
+    {
+      "id": "KUAJ25LD",
+      "firstName": "full",
+      "lastName": "name",
+      "type": "Person",
+      "profiles": [
+        {
+          "accountId": "IEAGIITR",
+          "email": "rruvfql3hu@nxsroredvw.com",
+          "role": "User",
+          "external": false,
+          "admin": true,
+          "owner": false
+        }
+      ],
+      "avatarUrl": "https://www.wrike.com/avatars//4A/F9/Box_ff3f9d3f_70-78_v1.png",
+      "timezone": "US/Pacific",
+      "locale": "en",
+      "deleted": false,
+      "me": true,
+      "metadata": [
+        {
+          "key": "testMetaKey",
+          "value": "testMetaValue"
+        }
+      ]
+    }
+  ]
+}

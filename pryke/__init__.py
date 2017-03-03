@@ -23,6 +23,20 @@ class Pryke:
                                            authorization_response=response,
                                            client_secret=client_secret)
 
+    def accounts(self):
+        """Yields accounts user has access to"""
+        r = self.oauth.get("https://www.wrike.com/api/v3/accounts")
+
+        for account_data in r.json()['data']:
+            yield Account(data=account_data)
+
+    def contacts(self):
+        """Yields accounts user has access to"""
+        r = self.oauth.get("https://www.wrike.com/api/v3/contacts")
+
+        for contact_data in r.json()['data']:
+            yield Contact(data=contact_data)
+
     def folders(self, folder_ids=None):
         """
         Yields folders for all accounts, or filtered by folder ids.
@@ -62,6 +76,33 @@ class PrykeObject:
                 setattr(self, date_field, datetime.datetime.strptime(current_value, "%Y-%m-%dT%H:%M:%SZ"))
 
         return True
+
+
+class Account(PrykeObject):
+
+    def __init__(self, data={}):
+        self.id = data.get('id')
+        self.name = data.get('name')
+        self.date_format = data.get('title')
+        self.first_day_of_week = data.get("firstDayOfWeek")
+        self.work_days = data.get("workDays")
+        self.root_folder_id = data.get("rootFolderId")
+        self.recycle_bin_id = data.get("recycleBinId")
+        self.created_date = data.get("createdDate")
+        # more
+
+    def __repr__(self):
+        return "Account(id='{}', name='{}')".format(self.id, self.name)
+
+
+class Contact(PrykeObject):
+
+    def __init__(self, data={}):
+        self.id = data.get('id')
+        self.first_name = data.get('firstName')
+        self.last_name = data.get('lastName')
+        self.type = data.get('type')
+        # more
 
 
 class Folder(PrykeObject):

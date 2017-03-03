@@ -1,0 +1,108 @@
+{
+  "kind": "tasks",
+  "data": [
+    {
+      "id": "IEAGIITRKQAYHYM4",
+      "accountId": "IEAGIITR",
+      "title": "Test task",
+      "description": "",
+      "briefDescription": "",
+      "parentIds": [
+        "IEAGIITRI4AYHYMW"
+      ],
+      "superParentIds": [
+      ],
+      "sharedIds": [
+        "KUAJ25LD"
+      ],
+      "responsibleIds": [
+      ],
+      "status": "Active",
+      "importance": "Normal",
+      "createdDate": "2016-10-03T16:10:41Z",
+      "updatedDate": "2016-10-03T16:10:45Z",
+      "dates": {
+        "type": "Planned",
+        "duration": 2880,
+        "start": "2016-09-29T09:00:00",
+        "due": "2016-10-06T17:00:00"
+      },
+      "scope": "WsTask",
+      "authorIds": [
+        "KUAJ25LD"
+      ],
+      "customStatusId": "IEAGIITRJMAAAAAA",
+      "hasAttachments": false,
+      "attachmentCount": 0,
+      "permalink": "https://www.wrike.com/open.htm?id=25420188",
+      "priority": "19453c0000006c00",
+      "superTaskIds": [
+      ],
+      "subTaskIds": [
+      ],
+      "dependencyIds": [
+        "IEAGIITRIUAYHYM4KMAYHYM5",
+        "IEAGIITRIUAYHYM6KMAYHYM4"
+      ],
+      "metadata": [
+        {
+          "key": "testMetaKey",
+          "value": "testMetaValue"
+        }
+      ],
+      "customFields": [
+      ]
+    },
+    {
+      "id": "IEAGIITRKQAYHYM5",
+      "accountId": "IEAGIITR",
+      "title": "Test task",
+      "description": "",
+      "briefDescription": "",
+      "parentIds": [
+        "IEAGIITRI4AYHYMX"
+      ],
+      "superParentIds": [
+      ],
+      "sharedIds": [
+        "KUAJ25LD"
+      ],
+      "responsibleIds": [
+      ],
+      "status": "Active",
+      "importance": "Normal",
+      "createdDate": "2016-10-03T16:10:41Z",
+      "updatedDate": "2016-10-03T16:10:45Z",
+      "dates": {
+        "type": "Planned",
+        "duration": 2880,
+        "start": "2016-09-29T09:00:00",
+        "due": "2016-10-06T17:00:00"
+      },
+      "scope": "WsTask",
+      "authorIds": [
+        "KUAJ25LD"
+      ],
+      "customStatusId": "IEAGIITRJMAAAAAA",
+      "hasAttachments": false,
+      "attachmentCount": 0,
+      "permalink": "https://www.wrike.com/open.htm?id=25420189",
+      "priority": "19453c0000007000",
+      "superTaskIds": [
+      ],
+      "subTaskIds": [
+      ],
+      "dependencyIds": [
+        "IEAGIITRIUAYHYM4KMAYHYM5"
+      ],
+      "metadata": [
+        {
+          "key": "testMetaKey",
+          "value": "testMetaValue"
+        }
+      ],
+      "customFields": [
+      ]
+    }
+  ]
+}
