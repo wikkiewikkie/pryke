@@ -23,6 +23,11 @@ class Pryke:
                                            authorization_response=response,
                                            client_secret=client_secret)
 
+    def account(self, account_id):
+        r = self.oauth.get("https://www.wrike.com/api/v3/accounts/IEAGIITR")
+
+        return Account(data=r.json()['data'][0])
+
     def accounts(self):
         """Yields accounts user has access to"""
         r = self.oauth.get("https://www.wrike.com/api/v3/accounts")
@@ -97,7 +102,13 @@ class Account(PrykeObject):
         self.root_folder_id = data.get("rootFolderId")
         self.recycle_bin_id = data.get("recycleBinId")
         self.created_date = data.get("createdDate")
-        # more
+        self.subscription = data.get("subscription")
+        self.metadata = data.get("matadata")
+        self.custom_fields = data.get("customFields")
+        self.joined_date = data.get("joinedDate")
+
+        self._date_fields = ["created_date", "joined_date"]
+        self._format_dates()
 
     def __repr__(self):
         return "Account(id='{}', name='{}')".format(self.id, self.name)

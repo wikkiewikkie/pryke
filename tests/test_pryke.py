@@ -9,6 +9,13 @@ from pryke import Account, Comment, Contact, Folder, Pryke, Task
 #
 #    assert isinstance(p, Pryke)
 
+
+def test_pryke_account(mocked):
+    a = mocked.account('IEAGIITR')
+    assert isinstance(a, Account)
+    assert a.id == "IEAGIITR"
+
+
 def test_pryke_accounts(mocked):
     a = None
     for account in mocked.accounts():

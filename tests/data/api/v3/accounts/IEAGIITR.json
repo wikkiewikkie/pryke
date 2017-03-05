@@ -1,0 +1,57 @@
+{
+  "kind": "accounts",
+  "data": [
+    {
+      "id": "IEAGIITR",
+      "name": "Test User’s Team",
+      "dateFormat": "MM/dd/yyyy",
+      "firstDayOfWeek": "Sun",
+      "workDays": [
+        "Mon",
+        "Tue",
+        "Wed"
+      ],
+      "rootFolderId": "IEAGIITRI7777777",
+      "recycleBinId": "IEAGIITRI7777776",
+      "createdDate": "2016-10-03T16:10:35Z",
+      "subscription": {
+        "type": "Enterprise",
+        "paid": false,
+        "userLimit": 100
+      },
+      "metadata": [
+        {
+          "key": "testMetaKey",
+          "value": "testMetaValue"
+        }
+      ],
+      "customFields": [
+        {
+          "id": "IEAGIITRJUAAHU62",
+          "accountId": "IEAGIITR",
+          "title": "column1",
+          "type": "Text",
+          "sharedIds": [
+          ]
+        },
+        {
+          "id": "IEAGIITRJUAAHU63",
+          "accountId": "IEAGIITR",
+          "title": "column2",
+          "type": "Text",
+          "sharedIds": [
+          ]
+        },
+        {
+          "id": "IEAGIITRJUAAHU64",
+          "accountId": "IEAGIITR",
+          "title": "column1",
+          "type": "Text",
+          "sharedIds": [
+          ]
+        }
+      ],
+      "joinedDate": "2016-10-03T16:10:36Z"
+    }
+  ]
+}
