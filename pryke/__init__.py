@@ -30,6 +30,13 @@ class Pryke:
         for account_data in r.json()['data']:
             yield Account(data=account_data)
 
+    def comments(self):
+        """Yields all comments in all accounts"""
+        r = self.oauth.get("https://www.wrike.com/api/v3/comments")
+
+        for comment_data in r.json()['data']:
+            yield Comment(data=comment_data)
+
     def contacts(self):
         """Yields accounts user has access to"""
         r = self.oauth.get("https://www.wrike.com/api/v3/contacts")
@@ -81,6 +88,7 @@ class PrykeObject:
 class Account(PrykeObject):
 
     def __init__(self, data={}):
+        super().__init__()
         self.id = data.get('id')
         self.name = data.get('name')
         self.date_format = data.get('title')
@@ -95,9 +103,25 @@ class Account(PrykeObject):
         return "Account(id='{}', name='{}')".format(self.id, self.name)
 
 
+class Comment(PrykeObject):
+
+    def __init__(self, data={}):
+        super().__init__()
+        self.id = data.get('id')
+        self.author_id = data.get('authorId')
+        self.text = data.get('text')
+        self.updated_date = data.get('updatedDate')
+        self.created_date = data.get('createdDate')
+        self.task_id = data.get('taskId')
+
+        self._date_fields = ["created_date", "updated_date"]
+        self._format_dates()
+
+
 class Contact(PrykeObject):
 
     def __init__(self, data={}):
+        super().__init__()
         self.id = data.get('id')
         self.first_name = data.get('firstName')
         self.last_name = data.get('lastName')

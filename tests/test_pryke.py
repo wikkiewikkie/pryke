@@ -1,4 +1,4 @@
-from pryke import Account, Contact, Folder, Pryke, Task
+from pryke import Account, Comment, Contact, Folder, Pryke, Task
 
 
 #def test_pryke(mocked):
@@ -15,6 +15,14 @@ def test_pryke_accounts(mocked):
         a = account
         assert isinstance(account, Account)
     assert a.id == "IEAGIITR"
+
+
+def test_pryke_comments(mocked):
+    c = None
+    for comment in mocked.comments():
+        c = comment
+        assert isinstance(comment, Comment)
+    assert c.id == "IEAGIITRIMBEVLZE"
 
 
 def test_pryke_contacts(mocked):
