@@ -1,4 +1,4 @@
-from pryke import Account, Comment, Contact, Folder, Pryke, Task
+from pryke import Account, Comment, Contact, Folder, Group, Pryke, Task
 
 import datetime
 
@@ -56,6 +56,12 @@ def test_pryke_folders(mocked):
         assert isinstance(folder, Folder)
 
     assert f.id == "IEAGIITRI4AYHYMV"
+
+
+def test_pryke_group(mocked):
+    g = mocked.group('KX7ZHLB5')
+    assert isinstance(g, Group)
+    assert g.id == "KX7ZHLB5"
 
 
 def test_pryke_tasks(mocked):

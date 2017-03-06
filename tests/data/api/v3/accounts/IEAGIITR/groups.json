@@ -1,0 +1,48 @@
+{
+  "kind": "groups",
+  "data": [
+    {
+      "id": "KX7ZHLB7",
+      "accountId": "IEAGIITR",
+      "title": "My Team",
+      "memberIds": [
+        "KUAJ25LC",
+        "KUAJ25LD",
+        "KUAJ25LE"
+      ],
+      "childIds": [
+      ],
+      "parentIds": [
+      ],
+      "avatarUrl": "default/internal_users_group.png",
+      "myTeam": true
+    },
+    {
+      "id": "KX7ZHLB6",
+      "accountId": "IEAGIITR",
+      "title": "Test parent group",
+      "memberIds": [
+      ],
+      "childIds": [
+        "KX7ZHLB5"
+      ],
+      "parentIds": [
+      ],
+      "avatarUrl": "/93/AF/Circle_ffd3ae8b_84-80_v1.png"
+    },
+    {
+      "id": "KX7ZHLB5",
+      "accountId": "IEAGIITR",
+      "title": "New test group",
+      "memberIds": [
+        "KUAJ25LD"
+      ],
+      "childIds": [
+      ],
+      "parentIds": [
+        "KX7ZHLB6"
+      ],
+      "avatarUrl": "/29/F3/Circle_ffc43e15_78-71_v1.png"
+    }
+  ]
+}

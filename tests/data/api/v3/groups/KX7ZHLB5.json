@@ -1,0 +1,19 @@
+{
+  "kind": "groups",
+  "data": [
+    {
+      "id": "KX7ZHLB5",
+      "accountId": "IEAGIITR",
+      "title": "New test group",
+      "memberIds": [
+        "KUAJ25LD"
+      ],
+      "childIds": [
+      ],
+      "parentIds": [
+        "KX7ZHLB6"
+      ],
+      "avatarUrl": "/29/F3/Circle_ffc43e15_78-71_v1.png"
+    }
+  ]
+}

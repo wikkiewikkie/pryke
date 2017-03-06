@@ -83,6 +83,20 @@ class Pryke:
         for folder_data in r.json()['data']:
             yield Folder(self, data=folder_data)
 
+    def group(self, group_id):
+        """
+        Looks up a group by ID
+
+        Args:
+            group_id (str):  Group ID
+
+        Returns:
+            Group
+        """
+        r = self.get("groups/{}".format(group_id))
+
+        return Group(self, data=r.json()['data'][0])
+
     def tasks(self):
         r = self.get("tasks")
         for task_data in r.json()['data']:
@@ -134,7 +148,7 @@ class Account(PrykeObject):
         self.recycle_bin_id = data.get("recycleBinId")
         self.created_date = data.get("createdDate")
         self.subscription = data.get("subscription")
-        self.metadata = data.get("matadata")
+        self.metadata = data.get("metadata")
         self.custom_fields = data.get("customFields")
         self.joined_date = data.get("joinedDate")
 
@@ -156,6 +170,19 @@ class Account(PrykeObject):
 
         for contact_data in r.json()['data']:
             yield Contact(self.instance, data=contact_data)
+
+    def groups(self):
+        """
+        All groups associated with this account.
+
+        Yields:
+            Group
+
+        """
+        r = self.get("accounts/{}/groups".format(self.id))
+
+        for group_data in r.json()['data']:
+            yield Group(self.instance, data=group_data)
 
     def tasks(self):
         """
@@ -231,6 +258,39 @@ class Folder(PrykeObject):
             f = Folder()
             f.id = child_id
             yield f
+
+
+class Group(PrykeObject):
+
+    def __init__(self, instance, data={}):
+        """
+        A collection of Users
+
+        Args:
+            instance (Pryke):  An API client instance.
+            data (dict):  Data to populate object attributes.
+        """
+        super().__init__(instance, data)
+
+        self.id = data.get('id')
+        self.account_id = data.get('accountId')
+        self.title = data.get('title')
+        self.member_ids = data.get('memberIds')  # List of group members user IDs
+        self.child_ids = data.get('childIds')
+        self.parent_ids = data.get('parentIds')
+        self.avatar_url = data.get('avatarUrl')
+        self.my_team = data.get('myTeam')  # Field is present and set to true for My Team (default) group
+        self.metadata = data.get('metadata')
+
+    def account(self):
+        """
+        Account associated with this group.
+
+        Returns:
+            Account
+
+        """
+        return self.instance.account(self.account_id)
 
 
 class Task(PrykeObject):
