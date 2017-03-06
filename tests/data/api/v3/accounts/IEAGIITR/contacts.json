@@ -1,0 +1,84 @@
+{
+  "kind": "contacts",
+  "data": [
+    {
+      "id": "KX7ZHLB7",
+      "firstName": "My Team",
+      "lastName": "",
+      "type": "Group",
+      "profiles": [
+        {
+          "accountId": "IEAGIITR",
+          "role": "User",
+          "external": false,
+          "admin": false,
+          "owner": false
+        }
+      ],
+      "avatarUrl": "https://www.wrike.com/avatars/default/internal_users_group.png",
+      "timezone": "Z",
+      "locale": "en",
+      "deleted": false,
+      "memberIds": [
+        "KUAJ25LF",
+        "KUAJ25LE",
+        "KUAJ25LD"
+      ],
+      "metadata": [
+      ],
+      "myTeam": true
+    },
+    {
+      "id": "KX7ZHLB5",
+      "firstName": "New test group",
+      "lastName": "",
+      "type": "Group",
+      "profiles": [
+        {
+          "accountId": "IEAGIITR",
+          "role": "User",
+          "external": false,
+          "admin": false,
+          "owner": false
+        }
+      ],
+      "avatarUrl": "https://www.wrike.com/avatars//29/F3/Circle_ffc43e15_78-71_v1.png",
+      "timezone": "Z",
+      "locale": "en",
+      "deleted": false,
+      "memberIds": [
+        "KUAJ25LD"
+      ],
+      "metadata": [
+        {
+          "key": "testMetaKey",
+          "value": "testMetaValue"
+        }
+      ]
+    },
+    {
+      "id": "KX7ZHLB6",
+      "firstName": "Test parent group",
+      "lastName": "",
+      "type": "Group",
+      "profiles": [
+        {
+          "accountId": "IEAGIITR",
+          "role": "User",
+          "external": false,
+          "admin": false,
+          "owner": false
+        }
+      ],
+      "avatarUrl": "https://www.wrike.com/avatars//93/AF/Circle_ffd3ae8b_84-80_v1.png",
+      "timezone": "Z",
+      "locale": "en",
+      "deleted": false,
+      "memberIds": [
+        "KUAJ25LD"
+      ],
+      "metadata": [
+      ]
+    }
+  ]
+}

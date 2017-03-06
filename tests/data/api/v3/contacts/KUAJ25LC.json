@@ -1,0 +1,27 @@
+{
+  "kind": "contacts",
+  "data": [
+    {
+      "id": "KUAJ25LC",
+      "firstName": "Test",
+      "lastName": "User",
+      "type": "Person",
+      "profiles": [
+        {
+          "accountId": "IEAGIITR",
+          "email": "rruvfql3hu@nxsroredvw.com",
+          "role": "User",
+          "external": false,
+          "admin": false,
+          "owner": true
+        }
+      ],
+      "avatarUrl": "https://www.wrike.com/avatars//7E/A2/Box_ffdf2a2e_84-84_v1.png",
+      "timezone": "Europe/Moscow",
+      "locale": "en",
+      "deleted": false,
+      "metadata": [
+      ]
+    }
+  ]
+}

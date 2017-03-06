@@ -1,5 +1,6 @@
 from pryke import Account, Comment, Contact, Folder, Pryke, Task
 
+import datetime
 
 #def test_pryke(mocked):
 #
@@ -13,7 +14,9 @@ from pryke import Account, Comment, Contact, Folder, Pryke, Task
 def test_pryke_account(mocked):
     a = mocked.account('IEAGIITR')
     assert isinstance(a, Account)
+    assert isinstance(a.id, str)
     assert a.id == "IEAGIITR"
+    assert isinstance(a.created_date, datetime.datetime)
 
 
 def test_pryke_accounts(mocked):
@@ -30,6 +33,12 @@ def test_pryke_comments(mocked):
         c = comment
         assert isinstance(comment, Comment)
     assert c.id == "IEAGIITRIMBEVLZE"
+
+
+def test_pryke_contact(mocked):
+    c = mocked.contact('KUAJ25LC')
+    assert isinstance(c, Contact)
+    assert c.id == "KUAJ25LC"
 
 
 def test_pryke_contacts(mocked):

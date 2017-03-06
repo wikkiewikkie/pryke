@@ -7,6 +7,7 @@ class Pryke:
 
     def __init__(self, client_id, client_secret, access_token=None):
 
+        self.endpoint = "https://www.wrike.com/api/v3/"
         self.oauth = OAuth2Session(client_id=client_id, redirect_uri="http://localhost")
 
         if access_token is not None:
@@ -23,31 +24,49 @@ class Pryke:
                                            authorization_response=response,
                                            client_secret=client_secret)
 
-    def account(self, account_id):
-        r = self.oauth.get("https://www.wrike.com/api/v3/accounts/IEAGIITR")
+    def get(self, path):
+        """
 
-        return Account(data=r.json()['data'][0])
+        Args:
+            path (str): relative path to get.
+
+        Returns:
+            A requests response object.
+
+        """
+        return self.oauth.get("{}{}".format(self.endpoint, path))
+
+    def account(self, account_id):
+        r = self.get("accounts/{}".format(account_id))
+
+        return Account(self, data=r.json()['data'][0])
 
     def accounts(self):
         """Yields accounts user has access to"""
-        r = self.oauth.get("https://www.wrike.com/api/v3/accounts")
+        r = self.get("accounts")
 
         for account_data in r.json()['data']:
-            yield Account(data=account_data)
+            yield Account(self, data=account_data)
 
     def comments(self):
         """Yields all comments in all accounts"""
-        r = self.oauth.get("https://www.wrike.com/api/v3/comments")
+        r = self.get("comments")
 
         for comment_data in r.json()['data']:
-            yield Comment(data=comment_data)
+            yield Comment(self, data=comment_data)
+
+    def contact(self, contact_id):
+        """Returns a contact by ID"""
+        r = self.get("contacts/{}".format(contact_id))
+
+        return Contact(self, data=r.json()['data'][0])
 
     def contacts(self):
         """Yields accounts user has access to"""
-        r = self.oauth.get("https://www.wrike.com/api/v3/contacts")
+        r = self.get("contacts")
 
         for contact_data in r.json()['data']:
-            yield Contact(data=contact_data)
+            yield Contact(self, data=contact_data)
 
     def folders(self, folder_ids=None):
         """
@@ -57,23 +76,24 @@ class Pryke:
         :yields: Folder
         """
         if folder_ids is None:
-            r = self.oauth.get("https://www.wrike.com/api/v3/folders")
+            r = self.get("folders")
         else:
             folder_ids = ",".join(folder_ids)
-            r = self.oauth.get("https://www.wrike.com/api/v3/folders/{}".format(folder_ids))
-            print(r.json())
+            r = self.get("folders/{}".format(folder_ids))
         for folder_data in r.json()['data']:
-            yield Folder(data=folder_data)
+            yield Folder(self, data=folder_data)
 
     def tasks(self):
-        r = self.oauth.get("https://www.wrike.com/api/v3/tasks")
+        r = self.get("tasks")
         for task_data in r.json()['data']:
-            yield Task(data=task_data)
+            yield Task(self, data=task_data)
 
 
 class PrykeObject:
 
-    def __init__(self, data={}):
+    def __init__(self, instance, data={}):
+        self.instance = instance
+
         self._data = data
         self._date_fields = []
 
@@ -89,11 +109,22 @@ class PrykeObject:
 
         return True
 
+    def get(self, path):
+        return self.instance.get(path)
+
 
 class Account(PrykeObject):
 
-    def __init__(self, data={}):
-        super().__init__()
+    def __init__(self, instance, data={}):
+        """
+        A Wrike Account.
+
+        Args:
+            instance (Pryke):  An API client instance.
+            data (dict): Data to populate object attributes.
+        """
+        super().__init__(instance, data)
+
         self.id = data.get('id')
         self.name = data.get('name')
         self.date_format = data.get('title')
@@ -113,11 +144,37 @@ class Account(PrykeObject):
     def __repr__(self):
         return "Account(id='{}', name='{}')".format(self.id, self.name)
 
+    def contacts(self):
+        """
+        Gets the contacts associated with the account.
+
+        Yields:
+            Contacts
+
+        """
+        r = self.get("accounts/{}/contacts".format(self.id))
+
+        for contact_data in r.json()['data']:
+            yield Contact(self.instance, data=contact_data)
+
+    def tasks(self):
+        """
+        All tasks associated with the account.
+
+        Yields:
+            Tasks
+
+        """
+        r = self.get("accounts/{}/tasks".format(self.id))
+
+        for task_data in r.json()['data']:
+            yield Task(self.instance, data=task_data)
+
 
 class Comment(PrykeObject):
 
-    def __init__(self, data={}):
-        super().__init__()
+    def __init__(self, instance, data={}):
+        super().__init__(instance, data)
         self.id = data.get('id')
         self.author_id = data.get('authorId')
         self.text = data.get('text')
@@ -131,8 +188,8 @@ class Comment(PrykeObject):
 
 class Contact(PrykeObject):
 
-    def __init__(self, data={}):
-        super().__init__()
+    def __init__(self, instance, data={}):
+        super().__init__(instance, data)
         self.id = data.get('id')
         self.first_name = data.get('firstName')
         self.last_name = data.get('lastName')
@@ -142,8 +199,8 @@ class Contact(PrykeObject):
 
 class Folder(PrykeObject):
 
-    def __init__(self, data={}):
-        super().__init__()
+    def __init__(self, instance, data={}):
+        super().__init__(instance, data)
         self.id = data.get('id')
         self.accountId = data.get('accountId')
         self.title = data.get('title')
@@ -178,8 +235,8 @@ class Folder(PrykeObject):
 
 class Task(PrykeObject):
 
-    def __init__(self, data={}):
-        super().__init__()
+    def __init__(self, instance, data={}):
+        super().__init__(instance, data)
         self.id = data.get('id')
         self.account_id = data.get('accountId')
         self.title = data.get('title')
