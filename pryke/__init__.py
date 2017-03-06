@@ -102,6 +102,20 @@ class Pryke:
         for task_data in r.json()['data']:
             yield Task(self, data=task_data)
 
+    def user(self, user_id):
+        """
+        Looks up a user by ID
+
+        Args:
+            user_id (str):  ID for user.
+
+        Returns:
+            User
+        """
+        r = self.get("users/{}".format(user_id))
+
+        return User(self, data=r.json()['data'][0])
+
 
 class PrykeObject:
 
@@ -292,6 +306,17 @@ class Group(PrykeObject):
         """
         return self.instance.account(self.account_id)
 
+    def users(self):
+        """
+        All users belonging to this group.
+
+        Yields:
+            User
+
+        """
+        for user_id in self.member_ids:
+            yield self.instance.user(user_id)
+
 
 class Task(PrykeObject):
 
@@ -320,3 +345,23 @@ class Task(PrykeObject):
 
     def __repr__(self):
         return "Task(id='{}', title='{}')".format(self.id, self.title)
+
+
+class User(PrykeObject):
+
+    def __init__(self, instance, data={}):
+        """
+        Wrike User
+
+        Args:
+            instance (Pryke):  An API client instance.
+            data (dict):  Data to populate object attributes.
+        """
+        super().__init__(instance, data)
+
+        self.id = data.get('id')
+        self.first_name = data.get('firstName')
+        self.last_name = data.get('lastName')
+        self.type = data.get('type')
+        self.profiles = data.get('profiles')
+        # TODO: add more fields

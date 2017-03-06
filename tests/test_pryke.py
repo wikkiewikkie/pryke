@@ -1,4 +1,4 @@
-from pryke import Account, Comment, Contact, Folder, Group, Pryke, Task
+from pryke import Account, Comment, Contact, Folder, Group, Pryke, Task, User
 
 import datetime
 
@@ -71,3 +71,9 @@ def test_pryke_tasks(mocked):
         assert isinstance(task, Task)
 
     assert t.id == "IEAGIITRKQAYHYM5"
+
+
+def test_pryke_user(mocked):
+    u = mocked.user('KUAJ25LD')
+    assert isinstance(u, User)
+    assert u.id == "KUAJ25LD"
