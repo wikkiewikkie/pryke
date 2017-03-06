@@ -18,6 +18,9 @@ def test_pryke_account(mocked):
     assert a.id == "IEAGIITR"
     assert isinstance(a.created_date, datetime.datetime)
 
+    a = mocked.account('BOGUS')
+    assert a is None
+
 
 def test_pryke_accounts(mocked):
     a = None
@@ -47,6 +50,13 @@ def test_pryke_contacts(mocked):
         c = contact
         assert isinstance(contact, Contact)
     assert c.id == "KUAJ25LD"
+
+
+def test_pryke_folder(mocked):
+    f = mocked.folder("IEAGIITRI4AYHYMV")
+    assert isinstance(f, Folder)
+
+    assert f.id == "IEAGIITRI4AYHYMV"
 
 
 def test_pryke_folders(mocked):

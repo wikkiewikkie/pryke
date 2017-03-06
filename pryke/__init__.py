@@ -6,7 +6,14 @@ import datetime
 class Pryke:
 
     def __init__(self, client_id, client_secret, access_token=None):
+        """
+        A client for interacting with the Wrike API.
 
+        Args:
+            client_id (str):
+            client_secret (str):
+            access_token (str):
+        """
         self.endpoint = "https://www.wrike.com/api/v3/"
         self.oauth = OAuth2Session(client_id=client_id, redirect_uri="http://localhost")
 
@@ -26,6 +33,7 @@ class Pryke:
 
     def get(self, path):
         """
+        Dispatch GET request and return response.
 
         Args:
             path (str): relative path to get.
@@ -37,12 +45,29 @@ class Pryke:
         return self.oauth.get("{}{}".format(self.endpoint, path))
 
     def account(self, account_id):
+        """
+        Look up an account by ID
+
+        Args:
+            account_id (str): ID for the account
+
+        Returns:
+            Account
+        """
         r = self.get("accounts/{}".format(account_id))
 
-        return Account(self, data=r.json()['data'][0])
+        if r.status_code == 200:
+            return Account(self, data=r.json()['data'][0])
+        else:
+            return None
 
     def accounts(self):
-        """Yields accounts user has access to"""
+        """
+        All accounts current user has access to.
+
+        Yields:
+            Account
+        """
         r = self.get("accounts")
 
         for account_data in r.json()['data']:
@@ -67,6 +92,18 @@ class Pryke:
 
         for contact_data in r.json()['data']:
             yield Contact(self, data=contact_data)
+
+    def folder(self, folder_id):
+        """
+        Search for a single folder by ID
+        Args:
+            folder_id (str):  ID of the folder
+
+        Returns:
+            Folder
+        """
+        r = self.get("folders/{}".format(folder_id))
+        return Folder(self, data=r.json()['data'][0])
 
     def folders(self, folder_ids=None):
         """
@@ -185,9 +222,21 @@ class Account(PrykeObject):
         for contact_data in r.json()['data']:
             yield Contact(self.instance, data=contact_data)
 
+    def folders(self):
+        """
+        All folders associated with the account.
+
+        Yields:
+            Folder
+        """
+        r = self.get("accounts/{}/folders".format(self.id))
+
+        for folder_data in r.json()['data']:
+            yield Folder(self.instance, data=folder_data)
+
     def groups(self):
         """
-        All groups associated with this account.
+        All groups associated with the account.
 
         Yields:
             Group
@@ -272,6 +321,16 @@ class Folder(PrykeObject):
             f = Folder()
             f.id = child_id
             yield f
+
+    def shared_users(self):
+        """
+        Users who share the folder.
+
+        Yields:
+            User
+        """
+        for user_id in self.shared_ids:
+            yield self.instance.user(user_id)
 
 
 class Group(PrykeObject):

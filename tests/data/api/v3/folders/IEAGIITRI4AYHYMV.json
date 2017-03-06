@@ -1,0 +1,53 @@
+{
+  "kind": "folders",
+  "data": [
+    {
+      "id": "IEAGIITRI4AYHYMV",
+      "accountId": "IEAGIITR",
+      "title": "New title",
+      "createdDate": "2016-10-03T16:10:40Z",
+      "updatedDate": "2016-10-03T16:10:45Z",
+      "briefDescription": "New description",
+      "description": "New description",
+      "color": "None",
+      "sharedIds": [
+        "KUAJ25LD"
+      ],
+      "parentIds": [
+        "IEAGIITRI7777777"
+      ],
+      "childIds": [
+        "IEAGIITRI4AYHYMW",
+        "IEAGIITRI4AYHYMX"
+      ],
+      "superParentIds": [
+      ],
+      "scope": "WsFolder",
+      "hasAttachments": true,
+      "permalink": "https://www.wrike.com/open.htm?id=25420181",
+      "workflowId": "IEAGIITRK77ZXXMP",
+      "metadata": [
+        {
+          "key": "testMetaKey",
+          "value": "testMetaValue"
+        }
+      ],
+      "customFields": [
+        {
+          "id": "IEAGIITRJUAAHU62",
+          "value": "testValue"
+        }
+      ],
+      "project": {
+        "authorId": "KUAJ25LD",
+        "ownerIds": [
+          "KUAJ25LD"
+        ],
+        "status": "Green",
+        "startDate": "2016-10-03",
+        "endDate": "2016-10-10",
+        "createdDate": "2016-10-03T16:10:45Z"
+      }
+    }
+  ]
+}

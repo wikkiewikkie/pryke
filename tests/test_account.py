@@ -1,4 +1,4 @@
-from pryke import Contact, Group, Task
+from pryke import Contact, Folder, Group, Task
 
 
 def test_account_contacts(mocked):
@@ -7,6 +7,13 @@ def test_account_contacts(mocked):
         c = contact
         assert isinstance(contact, Contact)
     assert c.id == "KX7ZHLB6"
+
+
+def test_account_folders(mocked):
+    a = mocked.account('IEAGIITR')
+    for folder in a.folders():
+        assert isinstance(folder, Folder)
+    assert folder.id == "IEAGIITRI4AYHYMV"
 
 
 def test_account_groups(mocked):
