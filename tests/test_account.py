@@ -1,4 +1,19 @@
-from pryke import Contact, Folder, Group, Task
+from pryke import Attachment, AttachmentType, Contact, Folder, Group, Task
+
+import datetime
+
+
+def test_account_attachments(mocked):
+    a = mocked.account('IEAGIITR')
+    start = datetime.datetime(2016, 10, 2, 16, 10, 47)
+    end = datetime.datetime(2016, 10, 3, 16, 10, 47)
+
+    for attachment in a.attachments(start, end):
+        assert isinstance(attachment, Attachment)
+
+    assert isinstance(attachment.created_date, datetime.datetime)
+    assert isinstance(attachment.size, int)
+    assert attachment.type == AttachmentType.wrike
 
 
 def test_account_contacts(mocked):

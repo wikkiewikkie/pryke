@@ -1,3 +1,4 @@
+from enum import Enum, unique
 from requests_oauthlib import OAuth2Session
 
 import datetime
@@ -31,18 +32,19 @@ class Pryke:
                                            authorization_response=response,
                                            client_secret=client_secret)
 
-    def get(self, path):
+    def get(self, path, params={}):
         """
         Dispatch GET request and return response.
 
         Args:
             path (str): relative path to get.
+            params (dict):  dictionary of request parameters.
 
         Returns:
             A requests response object.
 
         """
-        return self.oauth.get("{}{}".format(self.endpoint, path))
+        return self.oauth.get("{}{}".format(self.endpoint, path), params=params)
 
     def account(self, account_id):
         """
@@ -134,6 +136,21 @@ class Pryke:
 
         return Group(self, data=r.json()['data'][0])
 
+    def task(self, task_id):
+        """
+        Looks up a task by ID
+        https://developers.wrike.com/documentation/api/methods/query-tasks#get-tasks-multi
+
+        Args:
+            task_id (str): Task ID
+
+        Returns:
+            Task
+        """
+        # TODO: add parameters
+        r = self.get("tasks/{}".format(task_id))
+        return Task(self, data=r.json()['data'][0])
+
     def tasks(self):
         r = self.get("tasks")
         for task_data in r.json()['data']:
@@ -174,15 +191,15 @@ class PrykeObject:
 
         return True
 
-    def get(self, path):
-        return self.instance.get(path)
+    def get(self, path, params={}):
+        return self.instance.get(path, params=params)
 
 
 class Account(PrykeObject):
 
     def __init__(self, instance, data={}):
         """
-        A Wrike Account.
+        Wrike Account.
 
         Args:
             instance (Pryke):  An API client instance.
@@ -208,6 +225,26 @@ class Account(PrykeObject):
 
     def __repr__(self):
         return "Account(id='{}', name='{}')".format(self.id, self.name)
+
+    def attachments(self, start, end):
+        """
+        Return all Attachments of account tasks and folders.
+        https://developers.wrike.com/documentation/api/methods/get-attachments#get-accounts-single-attachments
+
+        Args:
+            start (datetime.datetime): Created date filter start
+            end (datetime.datetime): Created date filter end (must be less than 31 days from start)
+
+        Yields:
+            Attachment
+        """
+        # TODO: add versions and withUrls params
+        params = {'createdDate': { 'start': start.strftime("%Y-%m-%dT%H:%M:%SZ"),
+                                   'end': end.strftime("%Y-%m-%dT%H:%M:%SZ") }}
+        r = self.get("accounts/{}/attachments".format(self.id), params=params)
+
+        for attachment_data in r.json()['data']:
+            yield Attachment(self.instance, data=attachment_data)
 
     def contacts(self):
         """
@@ -261,16 +298,63 @@ class Account(PrykeObject):
             yield Task(self.instance, data=task_data)
 
 
+class Attachment(PrykeObject):
+
+    def __init__(self, instance, data={}):
+        """
+        Wrike Attachment
+        https://developers.wrike.com/documentation/api/methods/attachments
+
+        Args:
+            instance (Pryke): Current Pryke instance.
+            data (dict):  Attributes to populate.
+        """
+        super().__init__(instance, data)
+        self.id = data.get('id')
+        self.author_id = data.get('authorId')  # ID of user who uploaded attachment
+        self.name = data.get('name')  # Attachment filename
+        self.created_date = data.get('createdDate')  # Upload date
+        self.version = data.get('version')  # Attachment version (number)
+        self.type = AttachmentType(data.get('type'))  # AttachmentType
+        self.content_type = data.get('contentType')  # string
+        self.size = data.get('size')  # For external attachments, size is equal to -1
+        self.task_id = data.get('taskId')  # ID of related task.
+        self.folder_id = data.get('folderId')  # ID of related folder.
+        # TODO: more fields
+
+        self._date_fields = ["created_date"]
+        self._format_dates()
+
+
+@unique
+class AttachmentType(Enum):
+
+    box = "Box"
+    drop_box = "DropBox"
+    google = "Google"
+    one_drive = "OneDrive"
+    wrike = "Wrike"  # Attachment file content stored in Wrike.
+
+
 class Comment(PrykeObject):
 
     def __init__(self, instance, data={}):
+        """
+        Wrike Comment
+        https://developers.wrike.com/documentation/api/methods/comments
+
+        Args:
+            instance (Pryke):
+            data (dict):
+        """
         super().__init__(instance, data)
         self.id = data.get('id')
         self.author_id = data.get('authorId')
-        self.text = data.get('text')
+        self.text = data.get('text')  # text (body) of the comment
         self.updated_date = data.get('updatedDate')
         self.created_date = data.get('createdDate')
         self.task_id = data.get('taskId')
+        self.folder_id = data.get('folderId')
 
         self._date_fields = ["created_date", "updated_date"]
         self._format_dates()
@@ -279,17 +363,33 @@ class Comment(PrykeObject):
 class Contact(PrykeObject):
 
     def __init__(self, instance, data={}):
+        """
+        Wrike Contact
+        https://developers.wrike.com/documentation/api/methods/contacts
+
+        Args:
+            instance (Pryke):
+            data (dict):
+        """
         super().__init__(instance, data)
         self.id = data.get('id')
         self.first_name = data.get('firstName')
         self.last_name = data.get('lastName')
-        self.type = data.get('type')
-        # more
+        self.type = data.get('type')  # UserType Enum
+        # TODO: add more properties
 
 
 class Folder(PrykeObject):
 
     def __init__(self, instance, data={}):
+        """
+        Wrike Folder
+        https://developers.wrike.com/documentation/api/methods/folders-&-projects
+
+        Args:
+            instance (Pryke):
+            data (dict):
+        """
         super().__init__(instance, data)
         self.id = data.get('id')
         self.accountId = data.get('accountId')
@@ -306,7 +406,7 @@ class Folder(PrykeObject):
         self.scope = data.get('scope')
         self.has_attachments = data.get('hasAttachments')
         self.attachment_count = data.get('attachmentCount')
-        # more
+        # TODO: add more fields
         self.project = data.get('project')
 
         self._date_fields = []
@@ -314,6 +414,20 @@ class Folder(PrykeObject):
 
     def __repr__(self):
         return "Folder(id='{}', title='{}')".format(self.id, self.title)
+
+    def attachments(self):
+        """
+        All Attachments of a folder.
+        https://developers.wrike.com/documentation/api/methods/get-attachments#get-folders-single-attachments
+
+        Yields:
+            Attachment
+        """
+        # TODO: add versions, createdDate, and withUrls parameters
+        r = self.get("folders/{}/attachments".format(self.id))
+
+        for attachment_data in r.json()['data']:
+            yield Attachment(self.instance, data=attachment_data)
 
     def children(self):
 
@@ -338,6 +452,7 @@ class Group(PrykeObject):
     def __init__(self, instance, data={}):
         """
         A collection of Users
+        https://developers.wrike.com/documentation/api/methods/groups
 
         Args:
             instance (Pryke):  An API client instance.
@@ -380,6 +495,14 @@ class Group(PrykeObject):
 class Task(PrykeObject):
 
     def __init__(self, instance, data={}):
+        """
+        Wrike Task
+        https://developers.wrike.com/documentation/api/methods/tasks
+
+        Args:
+            instance (Pryke): An API client instance.
+            data (dict): Data to populate object attributes.
+        """
         super().__init__(instance, data)
         self.id = data.get('id')
         self.account_id = data.get('accountId')
@@ -397,7 +520,7 @@ class Task(PrykeObject):
         self.completed_date = data.get('completedDate')
         self.dates = data.get('dates')
         self.scope = data.get('scope')
-        # more
+        # TODO: add more properties
 
         self._date_fields = ["created_date", "updated_date", "completed_date"]
         self._format_dates()
@@ -405,12 +528,27 @@ class Task(PrykeObject):
     def __repr__(self):
         return "Task(id='{}', title='{}')".format(self.id, self.title)
 
+    def attachments(self):
+        """
+        All Attachments of the task.
+        https://developers.wrike.com/documentation/api/methods/get-attachments#get-tasks-single-attachments
+
+        Yields:
+            Attachment
+        """
+        # TODO: add versions, createdDate, and withUrls parameters
+        r = self.get("tasks/{}/attachments".format(self.id))
+
+        for attachment_data in r.json()['data']:
+            yield Attachment(self.instance, data=attachment_data)
+
 
 class User(PrykeObject):
 
     def __init__(self, instance, data={}):
         """
         Wrike User
+        https://developers.wrike.com/documentation/api/methods/users
 
         Args:
             instance (Pryke):  An API client instance.
@@ -421,6 +559,6 @@ class User(PrykeObject):
         self.id = data.get('id')
         self.first_name = data.get('firstName')
         self.last_name = data.get('lastName')
-        self.type = data.get('type')
+        self.type = data.get('type')  # UserType Enum
         self.profiles = data.get('profiles')
-        # TODO: add more fields
+        # TODO: add more properties

@@ -16,18 +16,19 @@ class MockOAuthSession:
     def authorized(self):
         return True
 
-    def get(self, url):
+    def get(self, url, params={}):
         path = url.replace("https://www.wrike.com/", "")
         path = path.split("/")
         path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', *path)
         path += ".json"
-        return MockOAuthResponse(path)
+        return MockOAuthResponse(path, params)
 
 
 class MockOAuthResponse(object):
 
-    def __init__(self, path):
+    def __init__(self, path, params):
         self._path = path
+        self._params = params
 
     def json(self):
         with open(self._path, "r") as json_file:

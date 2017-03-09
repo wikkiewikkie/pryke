@@ -74,6 +74,12 @@ def test_pryke_group(mocked):
     assert g.id == "KX7ZHLB5"
 
 
+def test_pryke_task(mocked):
+    t = mocked.task('IEAGIITRKQAYHYM6')
+    assert isinstance(t, Task)
+    assert t.id == 'IEAGIITRKQAYHYM6'
+
+
 def test_pryke_tasks(mocked):
     t = None
     for task in mocked.tasks():
