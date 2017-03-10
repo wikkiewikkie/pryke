@@ -5,10 +5,16 @@ import datetime
 
 
 class Pryke:
+    """
+    A client for interacting with the Wrike API.
 
+    Attributes:
+        endpoint (str):  Base URL for the API
+        oauth (OAuth2Session):  OAuth Session
+    """
     def __init__(self, client_id, client_secret, access_token=None):
         """
-        A client for interacting with the Wrike API.
+        Initializes the client.
 
         Args:
             client_id (str):
@@ -31,6 +37,8 @@ class Pryke:
             token = self.oauth.fetch_token("https://www.wrike.com/oauth2/token",
                                            authorization_response=response,
                                            client_secret=client_secret)
+
+
 
     def get(self, path, params={}):
         """
@@ -151,8 +159,20 @@ class Pryke:
         r = self.get("tasks/{}".format(task_id))
         return Task(self, data=r.json()['data'][0])
 
-    def tasks(self):
-        r = self.get("tasks")
+    def tasks(self, title=None):
+        """
+        Queries for Tasks in all accounts.
+        https://developers.wrike.com/documentation/api/methods/query-tasks#get-tasks-empty
+
+        Keyword Args:
+            title (str):  Title filter, exact match
+
+        Yields:
+            Task
+
+        """
+        params = {'title': title}
+        r = self.get("tasks", params)
         for task_data in r.json()['data']:
             yield Task(self, data=task_data)
 
@@ -169,6 +189,21 @@ class Pryke:
         r = self.get("users/{}".format(user_id))
 
         return User(self, data=r.json()['data'][0])
+
+    @property
+    def version(self):
+        """
+        Current API version as reported by server.
+
+        Returns:
+            A tuple of the major and minor version numbers.
+
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/api-version
+        """
+        r = self.get("version")
+        data = r.json()["data"][0]
+        return data['major'], data['minor']
 
 
 class PrykeObject:
@@ -224,7 +259,7 @@ class Account(PrykeObject):
         self._format_dates()
 
     def __repr__(self):
-        return "Account(id='{}', name='{}')".format(self.id, self.name)
+        return "Pryke Account {}".format(self.id)
 
     def attachments(self, start, end):
         """
@@ -413,7 +448,7 @@ class Folder(PrykeObject):
         self._format_dates()
 
     def __repr__(self):
-        return "Folder(id='{}', title='{}')".format(self.id, self.title)
+        return "Pryke Folder {}".format(self.id)
 
     def attachments(self):
         """
@@ -432,7 +467,7 @@ class Folder(PrykeObject):
     def children(self):
 
         for child_id in self.child_ids:
-            f = Folder()
+            f = Folder(self.instance)
             f.id = child_id
             yield f
 
@@ -448,11 +483,26 @@ class Folder(PrykeObject):
 
 
 class Group(PrykeObject):
+    """
+    A collection of Wrike Users
 
+    Attributes:
+        id (str):  Unique identifier for the group
+        account_id (str):  ID for associated account
+        title (str):  Title for the group
+        member_ids (list):  List of group member user IDs
+        child_ids (list):  List of child group IDs
+        parent_ids (list):  List of parent group IDs
+        avatar_url (str):  URL for group avatar
+        my_team (bool):  True for default ("My Team") group
+        metadata (list):  List of group metadata entries (key, value string pairs)
+
+    See Also:
+        https://developers.wrike.com/documentation/api/methods/groups
+    """
     def __init__(self, instance, data={}):
         """
-        A collection of Users
-        https://developers.wrike.com/documentation/api/methods/groups
+        Inits group
 
         Args:
             instance (Pryke):  An API client instance.
@@ -463,12 +513,12 @@ class Group(PrykeObject):
         self.id = data.get('id')
         self.account_id = data.get('accountId')
         self.title = data.get('title')
-        self.member_ids = data.get('memberIds')  # List of group members user IDs
-        self.child_ids = data.get('childIds')
-        self.parent_ids = data.get('parentIds')
+        self.member_ids = data.get('memberIds', [])
+        self.child_ids = data.get('childIds', [])
+        self.parent_ids = data.get('parentIds', [])
         self.avatar_url = data.get('avatarUrl')
-        self.my_team = data.get('myTeam')  # Field is present and set to true for My Team (default) group
-        self.metadata = data.get('metadata')
+        self.my_team = data.get('myTeam', False)
+        self.metadata = data.get('metadata', [])
 
     def account(self):
         """
@@ -476,9 +526,10 @@ class Group(PrykeObject):
 
         Returns:
             Account
-
         """
-        return self.instance.account(self.account_id)
+        if self.account_id is not None:
+            return self.instance.account(self.account_id)
+        return None
 
     def users(self):
         """
@@ -486,18 +537,30 @@ class Group(PrykeObject):
 
         Yields:
             User
-
         """
         for user_id in self.member_ids:
             yield self.instance.user(user_id)
 
 
 class Task(PrykeObject):
+    """
+    Wrike Task
 
+    Attributes:
+        id (str):  Unique identifier for the task.
+        account_id (str):  ID for the associated account.
+        title (str):  Title of the task. Cannot be empty.
+        description (str):  Optional
+        brief_description (str):  Optional
+        parent_ids (list):  List of parent folder IDs
+        super_parent_ids (list):  List of super parent folder IDs
+
+    See Also:
+        https://developers.wrike.com/documentation/api/methods/tasks
+    """
     def __init__(self, instance, data={}):
         """
-        Wrike Task
-        https://developers.wrike.com/documentation/api/methods/tasks
+        Inits Task
 
         Args:
             instance (Pryke): An API client instance.
@@ -520,13 +583,34 @@ class Task(PrykeObject):
         self.completed_date = data.get('completedDate')
         self.dates = data.get('dates')
         self.scope = data.get('scope')
+        self.author_ids = data.get('authorIds')
+        self.customStatusId = data.get('customStatusId')
+        self.hasAttachments = data.get('hasAttachments')
+        self.attachmentCount = data.get('attachmentCount')  # (int)
+        self.permalink = data.get('permalink')  # (str)
+        self.priority = data.get('priority')  # (str)
+        self.followed_by_me = data.get('followedByMe')  # (bool)
+        self.follower_ids = data.get('followerIds')  # (list)
+        self.recurrent = data.get('recurrent')  # (bool)
         # TODO: add more properties
 
         self._date_fields = ["created_date", "updated_date", "completed_date"]
         self._format_dates()
 
     def __repr__(self):
-        return "Task(id='{}', title='{}')".format(self.id, self.title)
+        return "Pryke Task {}".format(self.id)
+
+    @property
+    def account(self):
+        """
+        Account this task is associated with.
+
+        Returns:
+            Account or None
+        """
+        if self.account_id is not None:
+            return self.instance.account(self.account_id)
+        return None
 
     def attachments(self):
         """

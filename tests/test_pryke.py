@@ -93,3 +93,9 @@ def test_pryke_user(mocked):
     u = mocked.user('KUAJ25LD')
     assert isinstance(u, User)
     assert u.id == "KUAJ25LD"
+
+
+def test_pryke_version(mocked):
+    major, minor = mocked.version
+    assert isinstance(major, int)
+    assert isinstance(minor, int)

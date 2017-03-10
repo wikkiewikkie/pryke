@@ -38,6 +38,19 @@ def test_account_groups(mocked):
     assert group.id == "KX7ZHLB5"
 
 
+def test_account_repr(mocked):
+    """
+    __repr__ method of Account object.
+
+    Args:
+        mocked (Pryke):  Pryke instance with OAuth client mocked.
+    """
+    a = mocked.account('IEAGIITR')
+
+    assert "Account" in repr(a)
+    assert a.id in repr(a)
+
+
 def test_account_tasks(mocked):
     a = mocked.account('IEAGIITR')
     for task in a.tasks():

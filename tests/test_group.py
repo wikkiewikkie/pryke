@@ -1,4 +1,4 @@
-from pryke import Account, User
+from pryke import Account, Group, User
 
 
 def test_group_account(mocked):
@@ -6,6 +6,9 @@ def test_group_account(mocked):
     a = g.account()
     assert isinstance(a, Account)
     assert a.id == "IEAGIITR"
+
+    g = Group(mocked)
+    assert g.account() is None
 
 
 def test_group_users(mocked):
