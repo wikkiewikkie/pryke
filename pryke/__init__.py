@@ -38,8 +38,6 @@ class Pryke:
                                            authorization_response=response,
                                            client_secret=client_secret)
 
-
-
     def get(self, path, params={}):
         """
         Dispatch GET request and return response.
@@ -52,6 +50,7 @@ class Pryke:
             A requests response object.
 
         """
+        # TODO: rate limiter per https://developers.wrike.com/faq/  Question No. 8
         return self.oauth.get("{}{}".format(self.endpoint, path), params=params)
 
     def account(self, account_id):
