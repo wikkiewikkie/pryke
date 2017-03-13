@@ -43,6 +43,14 @@ def test_account_groups(account):
     assert group.id == "KX7ZHLB5"
 
 
+@responses.activate
+def test_account_recycle_bin(account):
+    responses.add(responses.GET, "https://www.wrike.com/api/v3/folders/IEAGIITRI7777776",
+                  body='{"data": {}}', status=200, content_type="application/json")
+    assert isinstance(account.recycle_bin, Folder)
+    assert account.instance._response.request.url == 'https://www.wrike.com/api/v3/folders/IEAGIITRI7777776'
+
+
 def test_account_repr(account):
     """
     __repr__ method of Account object.
@@ -52,6 +60,14 @@ def test_account_repr(account):
     """
     assert "Account" in repr(account)
     assert account.id in repr(account)
+
+
+@responses.activate
+def test_account_root_folder(account):
+    responses.add(responses.GET, "https://www.wrike.com/api/v3/folders/IEAGIITRI7777777",
+                  body='{"data": {}}', status=200, content_type="application/json")
+    assert isinstance(account.root_folder, Folder)
+    assert account.instance._response.request.url == 'https://www.wrike.com/api/v3/folders/IEAGIITRI7777777'
 
 
 @responses.activate

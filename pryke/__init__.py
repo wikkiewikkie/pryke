@@ -236,10 +236,25 @@ class PrykeObject:
 
 
 class Account(PrykeObject):
+    """
+    Wrike Account.
 
+    Attributes:
+        id (str):  Unique identifier for account
+        name (str):  Name of account
+        date_format (str):  Date format (d/MM/yyyy or MM/dd/yyyy)
+        first_day_of_week (str): First day of week Week Day, Enum: Sat, Sun, Mon
+        work_days (list):  List of weekdays, not empty. These days are used in task duration computation
+        root_folder_id (str):  Identifier for root folder
+        root_folder (Folder):  Root folder
+        recycle_bin_id (str):  Identifier for recycle bin
+        recycle_bin (Folder):  Recycle bin folder
+
+
+    """
     def __init__(self, instance, data={}):
         """
-        Wrike Account.
+        Inits Account.
 
         Args:
             instance (Pryke):  An API client instance.
@@ -259,6 +274,11 @@ class Account(PrykeObject):
         self.metadata = data.get("metadata")
         self.custom_fields = data.get("customFields")
         self.joined_date = data.get("joinedDate")
+
+        if self.subscription is not None:
+            self.subscription_type = self.subscription.get('type')
+            self.subscription_paid = self.subscription.get('paid')
+            self.subscription_user_limit = self.subscription.get('userLimit')
 
         self._date_fields = ["created_date", "joined_date"]
         self._format_dates()
@@ -323,6 +343,28 @@ class Account(PrykeObject):
 
         for group_data in r.json()['data']:
             yield Group(self.instance, data=group_data)
+
+    @property
+    def recycle_bin(self):
+        """
+        Folder for deleted folders and tasks.
+
+        Returns:
+            Folder
+        """
+        r = self.get("folders/{}".format(self.recycle_bin_id))
+        return Folder(r.json()['data'])
+
+    @property
+    def root_folder(self):
+        """
+        Root folder of the account.
+
+        Returns:
+            Folder
+        """
+        r = self.get("folders/{}".format(self.root_folder_id))
+        return Folder(r.json()['data'])
 
     def tasks(self):
         """
