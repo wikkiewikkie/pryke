@@ -1,101 +1,115 @@
-from pryke import Account, Comment, Contact, Folder, Group, Pryke, Task, User
+from tests import add_response
+from pryke import Account, Comment, Contact, Folder, Group, Task, User
+from urllib.parse import urlparse
 
 import datetime
-
-#def test_pryke(mocked):
-#
-#    p = Pryke(keys['client_id'],
-#              keys['client_secret'],
-#              access_token=keys['access_token'])
-#
-#    assert isinstance(p, Pryke)
+import responses
 
 
-def test_pryke_account(mocked):
-    a = mocked.account('IEAGIITR')
+@responses.activate
+def test_pryke_account(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/accounts/IEAGIITR')
+    a = pryke.account('IEAGIITR')
     assert isinstance(a, Account)
     assert isinstance(a.id, str)
     assert a.id == "IEAGIITR"
     assert isinstance(a.created_date, datetime.datetime)
 
-    a = mocked.account('BOGUS')
+    responses.add(responses.GET, 'https://www.wrike.com/api/v3/accounts/BOGUS', status=404)
+    a = pryke.account('BOGUS')
     assert a is None
 
 
-def test_pryke_accounts(mocked):
-    a = None
-    for account in mocked.accounts():
-        a = account
+@responses.activate
+def test_pryke_accounts(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/accounts')
+    for account in pryke.accounts():
         assert isinstance(account, Account)
-    assert a.id == "IEAGIITR"
+    assert account.id == "IEAGIITR"
+
+    url = urlparse(pryke._response.url)
+    assert url.path == '/api/v3/accounts'
 
 
-def test_pryke_comments(mocked):
-    c = None
-    for comment in mocked.comments():
-        c = comment
+@responses.activate
+def test_pryke_comments(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/comments')
+    for comment in pryke.comments():
         assert isinstance(comment, Comment)
-    assert c.id == "IEAGIITRIMBEVLZE"
+    assert comment.id == "IEAGIITRIMBEVLZE"
 
 
-def test_pryke_contact(mocked):
-    c = mocked.contact('KUAJ25LC')
+@responses.activate
+def test_pryke_contact(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/contacts/KUAJ25LC')
+    c = pryke.contact('KUAJ25LC')
     assert isinstance(c, Contact)
     assert c.id == "KUAJ25LC"
 
 
-def test_pryke_contacts(mocked):
-    c = None
-    for contact in mocked.contacts():
-        c = contact
+@responses.activate
+def test_pryke_contacts(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/contacts')
+    for contact in pryke.contacts():
         assert isinstance(contact, Contact)
-    assert c.id == "KUAJ25LD"
+    assert contact.id == "KUAJ25LD"
 
 
-def test_pryke_folder(mocked):
-    f = mocked.folder("IEAGIITRI4AYHYMV")
+@responses.activate
+def test_pryke_folder(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/folders/IEAGIITRI4AYHYMV')
+    f = pryke.folder("IEAGIITRI4AYHYMV")
     assert isinstance(f, Folder)
 
     assert f.id == "IEAGIITRI4AYHYMV"
 
 
-def test_pryke_folders(mocked):
-    f = None
-    for folder in mocked.folders():
-        f = folder
+@responses.activate
+def test_pryke_folders(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/folders')
+    for folder in pryke.folders():
         assert isinstance(folder, Folder)
+    assert folder.id == "IEAGIITRI4AYHYMV"
 
-    assert f.id == "IEAGIITRI4AYHYMV"
 
-
-def test_pryke_group(mocked):
-    g = mocked.group('KX7ZHLB5')
+@responses.activate
+def test_pryke_group(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/groups/KX7ZHLB5')
+    g = pryke.group('KX7ZHLB5')
     assert isinstance(g, Group)
     assert g.id == "KX7ZHLB5"
 
 
-def test_pryke_task(mocked):
-    t = mocked.task('IEAGIITRKQAYHYM6')
+@responses.activate
+def test_pryke_task(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/tasks/IEAGIITRKQAYHYM6')
+    t = pryke.task('IEAGIITRKQAYHYM6')
     assert isinstance(t, Task)
     assert t.id == 'IEAGIITRKQAYHYM6'
 
 
-def test_pryke_tasks(mocked):
+@responses.activate
+def test_pryke_tasks(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/tasks')
     t = None
-    for task in mocked.tasks():
+    for task in pryke.tasks():
         t = task
         assert isinstance(task, Task)
 
     assert t.id == "IEAGIITRKQAYHYM5"
 
 
-def test_pryke_user(mocked):
-    u = mocked.user('KUAJ25LD')
+@responses.activate
+def test_pryke_user(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/users/KUAJ25LD')
+    u = pryke.user('KUAJ25LD')
     assert isinstance(u, User)
     assert u.id == "KUAJ25LD"
 
 
-def test_pryke_version(mocked):
-    major, minor = mocked.version
+@responses.activate
+def test_pryke_version(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/version')
+    major, minor = pryke.version
     assert isinstance(major, int)
     assert isinstance(minor, int)

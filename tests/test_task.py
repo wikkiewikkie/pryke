@@ -1,45 +1,50 @@
 from pryke import Account, Attachment, Task
+from tests import add_response
+
+import responses
 
 
-def test_task_account(mocked):
+@responses.activate
+def test_task_account(task):
     """
     account method of Task object.
 
     Args:
-        mocked (Pryke):  Pryke instance with OAuth client mocked.
+        task (pryke.Task):  Task to test.
     """
-    t = mocked.task('IEAGIITRKQAYHYM6')
-    assert isinstance(t.account, Account)
-    assert t.account.id == 'IEAGIITR'
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/accounts/IEAGIITR')
+    assert isinstance(task.account, Account)
+    assert task.account.id == 'IEAGIITR'
 
-    t = Task(mocked)
-    assert t.account is None
+    # TODO: re-implement
+    # t = Task(mocked)
+    # assert t.account is None
 
 
-def test_task_attachments(mocked):
+@responses.activate
+def test_task_attachments(task):
     """
     attachments method of Task object.
 
     Args:
-        mocked (Pryke):  Pryke instance with OAuth client mocked.
+        task (pryke.Task):  Task to test.
     """
-    t = mocked.task('IEAGIITRKQAYHYM6')
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/tasks/IEAGIITRKQAYHYM6/attachments')
 
-    for attachment in t.attachments():
+    for attachment in task.attachments():
         assert isinstance(attachment, Attachment)
 
     assert attachment.id == "IEAGIITRIYACEGSN"
     assert attachment.task_id == 'IEAGIITRKQAYHYM6'
 
 
-def test_task_repr(mocked):
+def test_task_repr(task):
     """
     __repr__ method of Task object.
 
     Args:
         mocked (Pryke):  Pryke instance with OAuth client mocked.
     """
-    t = mocked.task('IEAGIITRKQAYHYM6')
-    value = repr(t)
+    value = repr(task)
     assert "Task" in value
-    assert t.id in value
+    assert task.id in value

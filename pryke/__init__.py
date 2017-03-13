@@ -1,6 +1,7 @@
 from enum import Enum, unique
 from requests_oauthlib import OAuth2Session
 
+
 import datetime
 
 
@@ -9,6 +10,7 @@ class Pryke:
     A client for interacting with the Wrike API.
 
     Attributes:
+        _response (request):  Last response received by client.  Used for testing.
         endpoint (str):  Base URL for the API
         oauth (OAuth2Session):  OAuth Session
     """
@@ -23,6 +25,7 @@ class Pryke:
         """
         self.endpoint = "https://www.wrike.com/api/v3/"
         self.oauth = OAuth2Session(client_id=client_id, redirect_uri="http://localhost")
+        self._response = None
 
         if access_token is not None:
             self.oauth.token = access_token
@@ -51,7 +54,8 @@ class Pryke:
 
         """
         # TODO: rate limiter per https://developers.wrike.com/faq/  Question No. 8
-        return self.oauth.get("{}{}".format(self.endpoint, path), params=params)
+        self._response = self.oauth.get("{}{}".format(self.endpoint, path), params=params)
+        return self._response
 
     def account(self, account_id):
         """
@@ -74,6 +78,8 @@ class Pryke:
         """
         All accounts current user has access to.
 
+        Keyword Args:
+            me (bool):  If present - only contact info of requesting user is returned
         Yields:
             Account
         """

@@ -6,3 +6,9 @@ Python library used to interact with [Wrike API](https://developers.wrike.com/do
 ## Running Tests
 
 py.test --cov=pryke/ --cov-report=term-missing
+
+## Test Objectives
+
+* Well-formed and correct parameters are passed to the API.
+* Correctly handle data returned by the API.
+* Client behaves correctly when API calls produce an error.

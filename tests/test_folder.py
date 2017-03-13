@@ -1,58 +1,58 @@
 from pryke import Attachment, Folder, User
+from tests import add_response
+
+import responses
 
 
-def test_folder_attachments(mocked):
+@responses.activate
+def test_folder_attachments(folder):
     """
     attachments method of Folder object.
 
     Args:
-        mocked (Pryke):  Pryke instance with OAuth client mocked.
+        folder (Folder):  Folder object to test.
     """
-    f = mocked.folder('IEAGIITRI4AYHYMV')
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/folders/IEAGIITRI4AYHYMV/attachments')
 
-    for attachment in f.attachments():
+    for attachment in folder.attachments():
         assert isinstance(attachment, Attachment)
-
     assert attachment.id == "IEAGIITRIYACEGSM"
 
 
-def test_folder_children(mocked):
+def test_folder_children(folder):
     """
     children method of Folder object.
 
     Args:
-        mocked (Pryke):  Pryke instance with OAuth client mocked.
+        folder (Folder):  Folder object to test.
     """
-    f = mocked.folder('IEAGIITRI4AYHYMV')
-
-    for count, child in enumerate(f.children(), start=1):
+    for count, child in enumerate(folder.children(), start=1):
         assert isinstance(child, Folder)
     assert child.id == "IEAGIITRI4AYHYMX"
     assert count == 2
 
 
-def test_folder_repr(mocked):
+def test_folder_repr(folder):
     """
     __repr__ method of Folder object.
 
     Args:
-        mocked (Pryke):  Pryke instance with OAuth client mocked.
+        folder (Folder):  Folder object to test.
     """
-    f = mocked.folder('IEAGIITRI4AYHYMV')
-
-    assert "Folder" in repr(f)
-    assert f.id in repr(f)
+    assert "Folder" in repr(folder)
+    assert folder.id in repr(folder)
 
 
-def test_folder_shared_users(mocked):
+@responses.activate
+def test_folder_shared_users(folder):
     """
     shared_users method of Folder object.
 
     Args:
-        mocked (Pryke):  Pryke instance with OAuth client mocked.
+        folder (Folder):  Folder object to test.
     """
-    f = mocked.folder('IEAGIITRI4AYHYMV')
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/users/KUAJ25LD')
 
-    for u in f.shared_users():
+    for u in folder.shared_users():
         assert isinstance(u, User)
     assert u.id == "KUAJ25LD"
