@@ -1,6 +1,7 @@
-from pryke import Account, Attachment, Task
+from pryke import Account, Attachment, Comment, Task
 from tests import add_response
 
+import os
 import responses
 
 
@@ -36,6 +37,40 @@ def test_task_attachments(task):
 
     assert attachment.id == "IEAGIITRIYACEGSN"
     assert attachment.task_id == 'IEAGIITRKQAYHYM6'
+
+
+@responses.activate
+def test_task_comments(task):
+    """
+    comments method of Task object.
+
+    Args:
+        task (pryke.Task):  Task to test.
+    """
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/tasks/IEAGIITRKQAYHYM6/comments')
+
+    for comment in task.comments():
+        assert isinstance(comment, Comment)
+
+    assert comment.id == "IEAGIITRIMBEVLZE"
+    assert comment.task_id == 'IEAGIITRKQAYHYM6'
+
+
+@responses.activate
+def test_task_export(task):
+    """
+    export method of Task object.
+
+    Args:
+        task (pryke.Task):  Task to test.
+    """
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/users/KUAJ25LD')
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/tasks/IEAGIITRKQAYHYM6/attachments')
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/tasks/IEAGIITRKQAYHYM6/comments')
+
+    assert task.export("test.html")
+    assert os.path.exists("test.html")
+    os.remove("test.html")
 
 
 def test_task_repr(task):

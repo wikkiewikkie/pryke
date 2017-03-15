@@ -1,0 +1,21 @@
+{
+  "kind": "comments",
+  "data": [
+    {
+      "id": "IEAGIITRIMBEVLZG",
+      "authorId": "KUAJ25LD",
+      "text": "Task comment",
+      "updatedDate": "2016-10-03T16:10:42Z",
+      "createdDate": "2016-10-03T16:10:42Z",
+      "taskId": "IEAGIITRKQAYHYM6"
+    },
+    {
+      "id": "IEAGIITRIMBEVLZE",
+      "authorId": "KUAJ25LD",
+      "text": "New task comment text",
+      "updatedDate": "2016-10-03T16:10:41Z",
+      "createdDate": "2016-10-03T16:10:41Z",
+      "taskId": "IEAGIITRKQAYHYM6"
+    }
+  ]
+}

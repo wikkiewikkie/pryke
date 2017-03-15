@@ -1,0 +1,25 @@
+<html>
+    <body>
+        <h1>Task</h1>
+        <h2><a href="{{ task.permalink }}">{{ task.title }}</a></h2>
+        <p>{{ task.description }}</p>
+        <p><em>Created by {{ task.author.first_name }} {{ task.author.last_name }} on {{ task.created_date }}</em></p>
+
+        <p>Status: {{ task.status }}</p>
+        <p>Importance: {{ task.importance }}</p>
+        <p>Priority: {{ task.priority }}</p>
+
+        <h3>Attachments</h3>
+        <ul>
+        {% for attachment in task.attachments() %}
+            <li>{{ attachment.name }}</li>
+        {% endfor %}
+        </ul>
+        <h3>Comments</h3>
+        <ul>
+        {% for comment in task.comments() %}
+            <li>{{ comment.text }} <small>{{ comment.author }} on {{ comment.created_date }}</small></li>
+        {% endfor %}
+        </ul>
+    </body>
+</html>

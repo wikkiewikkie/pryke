@@ -1,4 +1,5 @@
 from enum import Enum, unique
+from jinja2 import Environment, PackageLoader
 from requests_oauthlib import OAuth2Session
 
 
@@ -13,6 +14,7 @@ class Pryke:
         _response (request):  Last response received by client.  Used for testing.
         endpoint (str):  Base URL for the API
         oauth (OAuth2Session):  OAuth Session
+        templates (Environment):  Jinja2 Templates Environment
     """
     def __init__(self, client_id, client_secret, access_token=None):
         """
@@ -41,6 +43,8 @@ class Pryke:
                                            authorization_response=response,
                                            client_secret=client_secret)
 
+        self.templates = Environment(loader=PackageLoader("pryke", "templates"))
+
     def get(self, path, params={}):
         """
         Dispatch GET request and return response.
@@ -50,7 +54,7 @@ class Pryke:
             params (dict):  dictionary of request parameters.
 
         Returns:
-            A requests response object.
+            requests.Response: Response
 
         """
         # TODO: rate limiter per https://developers.wrike.com/faq/  Question No. 8
@@ -65,7 +69,7 @@ class Pryke:
             account_id (str): ID for the account
 
         Returns:
-            Account
+            :class:`Account`:
         """
         r = self.get("accounts/{}".format(account_id))
 
@@ -78,10 +82,8 @@ class Pryke:
         """
         All accounts current user has access to.
 
-        Keyword Args:
-            me (bool):  If present - only contact info of requesting user is returned
         Yields:
-            Account
+            :class:`Account`: The next account.
         """
         r = self.get("accounts")
 
@@ -89,14 +91,27 @@ class Pryke:
             yield Account(self, data=account_data)
 
     def comments(self):
-        """Yields all comments in all accounts"""
+        """
+        All comments in all accounts
+
+        Yields:
+            :class:`Comment`:
+        """
         r = self.get("comments")
 
         for comment_data in r.json()['data']:
             yield Comment(self, data=comment_data)
 
     def contact(self, contact_id):
-        """Returns a contact by ID"""
+        """
+        Look up a contact by ID
+
+        Args:
+            contact_id (str):  Contact ID to look up.
+
+        Return:
+            :class:`Contact`:
+        """
         r = self.get("contacts/{}".format(contact_id))
 
         return Contact(self, data=r.json()['data'][0])
@@ -111,21 +126,25 @@ class Pryke:
     def folder(self, folder_id):
         """
         Search for a single folder by ID
+
         Args:
             folder_id (str):  ID of the folder
 
         Returns:
-            Folder
+            :class:`Folder`:
         """
         r = self.get("folders/{}".format(folder_id))
         return Folder(self, data=r.json()['data'][0])
 
     def folders(self, folder_ids=None):
         """
-        Yields folders for all accounts, or filtered by folder ids.
+        Folders for all accounts, or filtered by folder ids.
 
-        :param folder_ids: a list of folder IDs to return
-        :yields: Folder
+        Args:
+            folder_ids (list): a list of folder IDs to return
+
+        Yields:
+            :class:`Folder`:
         """
         if folder_ids is None:
             r = self.get("folders")
@@ -143,7 +162,7 @@ class Pryke:
             group_id (str):  Group ID
 
         Returns:
-            Group
+            :class:`Group`:
         """
         r = self.get("groups/{}".format(group_id))
 
@@ -152,13 +171,15 @@ class Pryke:
     def task(self, task_id):
         """
         Looks up a task by ID
-        https://developers.wrike.com/documentation/api/methods/query-tasks#get-tasks-multi
 
         Args:
             task_id (str): Task ID
 
         Returns:
-            Task
+            :class:`Task`:
+
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/query-tasks#get-tasks-multi
         """
         # TODO: add parameters
         r = self.get("tasks/{}".format(task_id))
@@ -166,15 +187,16 @@ class Pryke:
 
     def tasks(self, title=None):
         """
-        Queries for Tasks in all accounts.
-        https://developers.wrike.com/documentation/api/methods/query-tasks#get-tasks-empty
+        Queries for tasks in all accounts.
 
         Keyword Args:
             title (str):  Title filter, exact match
 
         Yields:
-            Task
+            :class:`Task`:
 
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/query-tasks#get-tasks-empty
         """
         params = {'title': title}
         r = self.get("tasks", params)
@@ -201,7 +223,7 @@ class Pryke:
         Current API version as reported by server.
 
         Returns:
-            A tuple of the major and minor version numbers.
+            tuple: A tuple of the major and minor version numbers.
 
         See Also:
             https://developers.wrike.com/documentation/api/methods/api-version
@@ -250,7 +272,8 @@ class Account(PrykeObject):
         recycle_bin_id (str):  Identifier for recycle bin
         recycle_bin (Folder):  Recycle bin folder
 
-
+    See Also:
+        https://developers.wrike.com/documentation/api/methods/accounts
     """
     def __init__(self, instance, data={}):
         """
@@ -289,14 +312,16 @@ class Account(PrykeObject):
     def attachments(self, start, end):
         """
         Return all Attachments of account tasks and folders.
-        https://developers.wrike.com/documentation/api/methods/get-attachments#get-accounts-single-attachments
 
         Args:
             start (datetime.datetime): Created date filter start
             end (datetime.datetime): Created date filter end (must be less than 31 days from start)
 
         Yields:
-            Attachment
+            :class:`Attachment`
+
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/get-attachments#get-accounts-single-attachments
         """
         # TODO: add versions and withUrls params
         params = {'createdDate': { 'start': start.strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -311,8 +336,7 @@ class Account(PrykeObject):
         Gets the contacts associated with the account.
 
         Yields:
-            Contacts
-
+            :class:`Contact`
         """
         r = self.get("accounts/{}/contacts".format(self.id))
 
@@ -324,7 +348,7 @@ class Account(PrykeObject):
         All folders associated with the account.
 
         Yields:
-            Folder
+            :class:`Folder`
         """
         r = self.get("accounts/{}/folders".format(self.id))
 
@@ -336,8 +360,7 @@ class Account(PrykeObject):
         All groups associated with the account.
 
         Yields:
-            Group
-
+            :class:`Group`
         """
         r = self.get("accounts/{}/groups".format(self.id))
 
@@ -350,7 +373,7 @@ class Account(PrykeObject):
         Folder for deleted folders and tasks.
 
         Returns:
-            Folder
+            :class:`Folder`
         """
         r = self.get("folders/{}".format(self.recycle_bin_id))
         return Folder(r.json()['data'])
@@ -361,7 +384,7 @@ class Account(PrykeObject):
         Root folder of the account.
 
         Returns:
-            Folder
+            :class:`Folder`
         """
         r = self.get("folders/{}".format(self.root_folder_id))
         return Folder(r.json()['data'])
@@ -371,8 +394,7 @@ class Account(PrykeObject):
         All tasks associated with the account.
 
         Yields:
-            Tasks
-
+            :class:`Task`
         """
         r = self.get("accounts/{}/tasks".format(self.id))
 
@@ -381,11 +403,15 @@ class Account(PrykeObject):
 
 
 class Attachment(PrykeObject):
+    """
+    Wrike Attachment
 
+    See Also:
+        https://developers.wrike.com/documentation/api/methods/attachments
+    """
     def __init__(self, instance, data={}):
         """
-        Wrike Attachment
-        https://developers.wrike.com/documentation/api/methods/attachments
+        Inits attachment
 
         Args:
             instance (Pryke): Current Pryke instance.
@@ -419,11 +445,15 @@ class AttachmentType(Enum):
 
 
 class Comment(PrykeObject):
+    """
+    Wrike Comment
 
+    See Also:
+        https://developers.wrike.com/documentation/api/methods/comments
+    """
     def __init__(self, instance, data={}):
         """
-        Wrike Comment
-        https://developers.wrike.com/documentation/api/methods/comments
+        Inits cmment
 
         Args:
             instance (Pryke):
@@ -438,16 +468,27 @@ class Comment(PrykeObject):
         self.task_id = data.get('taskId')
         self.folder_id = data.get('folderId')
 
+        self._author = None
         self._date_fields = ["created_date", "updated_date"]
         self._format_dates()
 
+    @property
+    def author(self):
+        if self._author is None:
+            self._author = self.instance.user(self.author_ids[0])
+        return self._author
+
 
 class Contact(PrykeObject):
+    """
+    Wrike Contact
 
+    See Also:
+        https://developers.wrike.com/documentation/api/methods/contacts
+    """
     def __init__(self, instance, data={}):
         """
-        Wrike Contact
-        https://developers.wrike.com/documentation/api/methods/contacts
+        Inits contact
 
         Args:
             instance (Pryke):
@@ -462,11 +503,15 @@ class Contact(PrykeObject):
 
 
 class Folder(PrykeObject):
+    """
+    Wrike Folder
 
+    See Also:
+       https://developers.wrike.com/documentation/api/methods/folders-&-projects
+    """
     def __init__(self, instance, data={}):
         """
-        Wrike Folder
-        https://developers.wrike.com/documentation/api/methods/folders-&-projects
+        Inits folder
 
         Args:
             instance (Pryke):
@@ -499,11 +544,13 @@ class Folder(PrykeObject):
 
     def attachments(self):
         """
-        All Attachments of a folder.
-        https://developers.wrike.com/documentation/api/methods/get-attachments#get-folders-single-attachments
+        All attachments of a folder.
 
         Yields:
             Attachment
+
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/get-attachments#get-folders-single-attachments
         """
         # TODO: add versions, createdDate, and withUrls parameters
         r = self.get("folders/{}/attachments".format(self.id))
@@ -641,6 +688,8 @@ class Task(PrykeObject):
         self.recurrent = data.get('recurrent')  # (bool)
         # TODO: add more properties
 
+        self._author = None
+
         self._date_fields = ["created_date", "updated_date", "completed_date"]
         self._format_dates()
 
@@ -659,6 +708,19 @@ class Task(PrykeObject):
             return self.instance.account(self.account_id)
         return None
 
+    @property
+    def author(self):
+        """
+        Author of the task.
+
+        Returns:
+            User
+        """
+        if self._author is None:
+            self._author = self.instance.user(self.author_ids[0])
+        return self._author
+
+
     def attachments(self):
         """
         All Attachments of the task.
@@ -673,13 +735,66 @@ class Task(PrykeObject):
         for attachment_data in r.json()['data']:
             yield Attachment(self.instance, data=attachment_data)
 
+    def comments(self):
+        """
+        All comments of the task.
+
+        Yields:
+            Comment
+
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/get-comments#get-tasks-single-comments
+        """
+        r = self.get("tasks/{}/comments".format(self.id))
+
+        for comment_data in r.json()['data']:
+            yield Comment(self.instance, data=comment_data)
+
+    def export(self, path):
+        """
+        Exports task to HTML format.
+
+        Args:
+            path (str): Fully-qualified path to the export file.
+
+        Returns:
+            bool
+        """
+        template = self.instance.templates.get_template("task.html")
+        with open(path, "w") as export_file:
+            export_file.write(template.render(task=self))
+        return True
+
 
 class User(PrykeObject):
+    """
+    Wrike User
 
+    Attributes:
+        id (str):  Unique Identifier
+        first_name (str):  First Name
+        last_name (str):  Last Name
+        type (UserType):  Type
+        profiles (list):  List of user profiles in accounts accessible for requesting user
+        avatar_url (str):  URL for avatar
+        timezone (str):  Timezone ID ('America/New_York')
+        locale (str):  Locale
+        deleted (bool):  True if user is deleted, false otherwise
+        me (bool):  Field is present and set to true for requesting user.
+        member_ids (list):  List of group members contact IDs
+        metadata (list):  Key/value pairs
+        my_team (bool):  present and set to true for My Team (default) group
+        title (str):  Title
+        company_name (str):  Company Name
+        phone (str):  Phone number
+        location (str):  Location
+
+    See Also:
+        https://developers.wrike.com/documentation/api/methods/users
+    """
     def __init__(self, instance, data={}):
         """
-        Wrike User
-        https://developers.wrike.com/documentation/api/methods/users
+        Inits User
 
         Args:
             instance (Pryke):  An API client instance.
@@ -690,6 +805,26 @@ class User(PrykeObject):
         self.id = data.get('id')
         self.first_name = data.get('firstName')
         self.last_name = data.get('lastName')
-        self.type = data.get('type')  # UserType Enum
+        self.type = UserType(data.get('type'))
         self.profiles = data.get('profiles')
-        # TODO: add more properties
+        self.avatar_url = data.get('avatarUrl')
+        self.timezone = data.get('timezone')
+        self.locale = data.get('locale')
+        self.deleted = data.get('deleted')
+        self.me = data.get('me')
+        self.member_ids = data.get('memberIds')
+        self.metadata = data.get('metadata')
+        self.my_team = data.get('myTeam')
+        self.title = data.get('title')
+        self.company_name = data.get('companyName')
+        self.phone = data.get('phone')
+        self.location = data.get('location')
+
+    def __str__(self):
+        return "{} {}".format(self.first_name, self.last_name)
+
+
+@unique
+class UserType(Enum):
+    person = "Person"
+    group = "Group"
