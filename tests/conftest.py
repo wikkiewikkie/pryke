@@ -21,6 +21,20 @@ def account(pryke):
 
 @pytest.fixture(scope="session")
 @responses.activate
+def attachment(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/attachments/IEAGIITRIYACEGSL')
+    return pryke.attachment('IEAGIITRIYACEGSL')
+
+
+@pytest.fixture(scope="session")
+@responses.activate
+def comment(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/comments/IEAGIITRIMBEVLZE')
+    return pryke.comment('IEAGIITRIMBEVLZE')
+
+
+@pytest.fixture(scope="session")
+@responses.activate
 def folder(pryke):
     add_response(responses.GET, 'https://www.wrike.com/api/v3/folders/IEAGIITRI4AYHYMV')
     return pryke.folder('IEAGIITRI4AYHYMV')

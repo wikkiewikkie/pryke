@@ -1,5 +1,5 @@
 from tests import add_response
-from pryke import Account, Comment, Contact, Folder, Group, Task, User
+from pryke import Account, Attachment, Comment, Contact, Folder, Group, Task, User
 from urllib.parse import urlparse
 
 import datetime
@@ -29,6 +29,33 @@ def test_pryke_accounts(pryke):
 
     url = urlparse(pryke._response.url)
     assert url.path == '/api/v3/accounts'
+
+
+@responses.activate
+def test_pryke_attachment(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/attachments/IEAGIITRIYACEGSL')
+    a = pryke.attachment('IEAGIITRIYACEGSL')
+    assert isinstance(a, Attachment)
+    assert isinstance(a.id, str)
+    assert a.id == "IEAGIITRIYACEGSL"
+    assert isinstance(a.created_date, datetime.datetime)
+
+    responses.add(responses.GET, 'https://www.wrike.com/api/v3/attachments/BOGUS', status=404)
+    a = pryke.attachment('BOGUS')
+    assert a is None
+
+
+@responses.activate
+def test_pryke_comment(pryke):
+    add_response(responses.GET, 'https://www.wrike.com/api/v3/comments/IEAGIITRIMBEVLZE')
+    a = pryke.comment('IEAGIITRIMBEVLZE')
+    assert isinstance(a, Comment)
+    assert isinstance(a.id, str)
+    assert a.id == "IEAGIITRIMBEVLZE"
+
+    responses.add(responses.GET, 'https://www.wrike.com/api/v3/comments/BOGUS', status=404)
+    a = pryke.comment('BOGUS')
+    assert a is None
 
 
 @responses.activate

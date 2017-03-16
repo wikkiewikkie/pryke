@@ -2,7 +2,6 @@ from enum import Enum, unique
 from jinja2 import Environment, PackageLoader
 from requests_oauthlib import OAuth2Session
 
-
 import datetime
 
 
@@ -13,8 +12,8 @@ class Pryke:
     Attributes:
         _response (request):  Last response received by client.  Used for testing.
         endpoint (str):  Base URL for the API
-        oauth (OAuth2Session):  OAuth Session
-        templates (Environment):  Jinja2 Templates Environment
+        oauth (requests_oauthlib.OAuth2Session):  OAuth Session
+        templates (jinja2.Environment):  Templates Environment
     """
     def __init__(self, client_id, client_secret, access_token=None):
         """
@@ -55,7 +54,6 @@ class Pryke:
 
         Returns:
             requests.Response: Response
-
         """
         # TODO: rate limiter per https://developers.wrike.com/faq/  Question No. 8
         self._response = self.oauth.get("{}{}".format(self.endpoint, path), params=params)
@@ -75,8 +73,7 @@ class Pryke:
 
         if r.status_code == 200:
             return Account(self, data=r.json()['data'][0])
-        else:
-            return None
+        return None
 
     def accounts(self):
         """
@@ -89,6 +86,36 @@ class Pryke:
 
         for account_data in r.json()['data']:
             yield Account(self, data=account_data)
+
+    def attachment(self, attachment_id):
+        """
+        Looks up an attachment by ID
+
+        Args:
+            attachment_id (str): ID of attachment
+
+        Returns:
+            :class:`Attachment`: The attachment
+        """
+        r = self.get("attachments/{}".format(attachment_id))
+        if r.status_code == 200:
+            return Attachment(self, data=r.json()['data'][0])
+        return None
+
+    def comment(self, comment_id):
+        """
+        Look up a comment by ID
+
+        Args:
+            comment_id:
+
+        Returns:
+            :class:`Comment`: The comment
+        """
+        r = self.get("comments/{}".format(comment_id))
+        if r.status_code == 200:
+            return Comment(self, data=r.json()['data'][0])
+        return None
 
     def comments(self):
         """
@@ -117,7 +144,15 @@ class Pryke:
         return Contact(self, data=r.json()['data'][0])
 
     def contacts(self):
-        """Yields accounts user has access to"""
+        """
+        Contacts of all users and user groups in all accessible accounts.
+
+        Yields:
+            :class:`Contact`
+
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/query-contacts#get-contacts-empty
+        """
         r = self.get("contacts")
 
         for contact_data in r.json()['data']:
@@ -136,21 +171,14 @@ class Pryke:
         r = self.get("folders/{}".format(folder_id))
         return Folder(self, data=r.json()['data'][0])
 
-    def folders(self, folder_ids=None):
+    def folders(self):
         """
-        Folders for all accounts, or filtered by folder ids.
-
-        Args:
-            folder_ids (list): a list of folder IDs to return
+        Folders for all accounts
 
         Yields:
             :class:`Folder`:
         """
-        if folder_ids is None:
-            r = self.get("folders")
-        else:
-            folder_ids = ",".join(folder_ids)
-            r = self.get("folders/{}".format(folder_ids))
+        r = self.get("folders")
         for folder_data in r.json()['data']:
             yield Folder(self, data=folder_data)
 
@@ -268,9 +296,7 @@ class Account(PrykeObject):
         first_day_of_week (str): First day of week Week Day, Enum: Sat, Sun, Mon
         work_days (list):  List of weekdays, not empty. These days are used in task duration computation
         root_folder_id (str):  Identifier for root folder
-        root_folder (Folder):  Root folder
         recycle_bin_id (str):  Identifier for recycle bin
-        recycle_bin (Folder):  Recycle bin folder
 
     See Also:
         https://developers.wrike.com/documentation/api/methods/accounts
@@ -406,6 +432,19 @@ class Attachment(PrykeObject):
     """
     Wrike Attachment
 
+    Attributes:
+        id (str): Unique identifier
+        author_id (str): ID of user that uploaded the attachment
+        name (str): File Name
+        created_date (datetime.datetime): Upload date
+        version (int): Version
+        type (:class:`AttachmentType`): Type
+        content_type (str): Content Type
+        size (int): File size; -1 for external attachments
+        task_id (str): ID of related task
+        folder_id (str): ID of related folder
+        comment_id (str): ID of related comment
+
     See Also:
         https://developers.wrike.com/documentation/api/methods/attachments
     """
@@ -415,23 +454,54 @@ class Attachment(PrykeObject):
 
         Args:
             instance (Pryke): Current Pryke instance.
+
+        Keyword Args:
             data (dict):  Attributes to populate.
         """
         super().__init__(instance, data)
+
         self.id = data.get('id')
-        self.author_id = data.get('authorId')  # ID of user who uploaded attachment
-        self.name = data.get('name')  # Attachment filename
-        self.created_date = data.get('createdDate')  # Upload date
-        self.version = data.get('version')  # Attachment version (number)
-        self.type = AttachmentType(data.get('type'))  # AttachmentType
-        self.content_type = data.get('contentType')  # string
-        self.size = data.get('size')  # For external attachments, size is equal to -1
-        self.task_id = data.get('taskId')  # ID of related task.
-        self.folder_id = data.get('folderId')  # ID of related folder.
+        self.author_id = data.get('authorId')
+        self.name = data.get('name')
+        self.created_date = data.get('createdDate')
+        self.version = data.get('version')
+        self.type = AttachmentType(data.get('type'))
+        self.content_type = data.get('contentType')
+        self.size = data.get('size')
+        self.task_id = data.get('taskId')
+        self.folder_id = data.get('folderId')
+        self.comment_id = data.get('commentId')
         # TODO: more fields
+
+        self._author = None
+        self._task = None
 
         self._date_fields = ["created_date"]
         self._format_dates()
+
+    @property
+    def author(self):
+        """
+        User that uploaded the attachment
+
+        Returns:
+            :class:`User`: User
+        """
+        if self._author is None:
+            self._author = self.instance.user(self.author_id)
+        return self._author
+
+    @property
+    def task(self):
+        """
+        Related task
+
+        Returns:
+            :class:`Task`: The related task
+        """
+        if self._task is None:
+            self._task = self.instance.task(self.task_id)
+        return self._task
 
 
 @unique
@@ -448,16 +518,25 @@ class Comment(PrykeObject):
     """
     Wrike Comment
 
+    Attributes:
+        id (str): Unique identifier
+        author_id (str): ID of author user
+        text (str): Text of the comment
+        updated_date (datetime.datetime): Date and time comment was last updated
+        created_date (datetime.datetime):  Date and time comment was created
+        task_id (str): ID of related task (only task_id OR folder_id will be populated, not both)
+        folder_id (str): ID of related folder (only task_id OR folder_id will be populated, not both)
+
     See Also:
         https://developers.wrike.com/documentation/api/methods/comments
     """
     def __init__(self, instance, data={}):
         """
-        Inits cmment
+        Inits comment
 
         Args:
-            instance (Pryke):
-            data (dict):
+            instance (Pryke): Current Pryke instance
+            data (dict): Data from API
         """
         super().__init__(instance, data)
         self.id = data.get('id')
@@ -469,14 +548,47 @@ class Comment(PrykeObject):
         self.folder_id = data.get('folderId')
 
         self._author = None
+        self._folder = None
+        self._task = None
+
         self._date_fields = ["created_date", "updated_date"]
         self._format_dates()
 
     @property
     def author(self):
+        """
+        Author of comment
+
+        Returns:
+            :class:`User`: The author
+        """
         if self._author is None:
-            self._author = self.instance.user(self.author_ids[0])
+            self._author = self.instance.user(self.author_id)
         return self._author
+
+    @property
+    def folder(self):
+        """
+        Related folder
+
+        Returns:
+            :class:`Folder`: The related folder
+        """
+        if self._folder is None and self.folder_id is not None:
+            self._folder = self.instance.folder(self.folder_id)
+        return self._folder
+
+    @property
+    def task(self):
+        """
+        Related task
+
+        Returns:
+            :class:`Task`: The related task
+        """
+        if self._task is None and self.task_id is not None:
+            self._task = self.instance.task(self.task_id)
+        return self._task
 
 
 class Contact(PrykeObject):
@@ -519,17 +631,17 @@ class Folder(PrykeObject):
         """
         super().__init__(instance, data)
         self.id = data.get('id')
-        self.accountId = data.get('accountId')
+        self.account_id = data.get('accountId')
         self.title = data.get('title')
         self.created_date = data.get('createdDate')
         self.updated_date = data.get('updatedDate')
         self.brief_description = data.get('briefDescription')
         self.description = data.get('description')
         self.color = data.get('color')
-        self.shared_ids = data.get('sharedIds')
-        self.parent_ids = data.get('parentIds')
-        self.child_ids = data.get('childIds')
-        self.super_parent_ids = data.get('superParentIds')
+        self.shared_ids = data.get('sharedIds', [])
+        self.parent_ids = data.get('parentIds', [])
+        self.child_ids = data.get('childIds', [])
+        self.super_parent_ids = data.get('superParentIds', [])
         self.scope = data.get('scope')
         self.has_attachments = data.get('hasAttachments')
         self.attachment_count = data.get('attachmentCount')
@@ -570,7 +682,7 @@ class Folder(PrykeObject):
         Users who share the folder.
 
         Yields:
-            User
+            :class:`User`
         """
         for user_id in self.shared_ids:
             yield self.instance.user(user_id)
@@ -621,9 +733,7 @@ class Group(PrykeObject):
         Returns:
             Account
         """
-        if self.account_id is not None:
-            return self.instance.account(self.account_id)
-        return None
+        return self.instance.account(self.account_id)
 
     def users(self):
         """
@@ -678,9 +788,9 @@ class Task(PrykeObject):
         self.dates = data.get('dates')
         self.scope = data.get('scope')
         self.author_ids = data.get('authorIds')
-        self.customStatusId = data.get('customStatusId')
-        self.hasAttachments = data.get('hasAttachments')
-        self.attachmentCount = data.get('attachmentCount')  # (int)
+        self.custom_status_id = data.get('customStatusId')
+        self.has_attachments = data.get('hasAttachments')
+        self.attachment_count = data.get('attachmentCount')  # (int)
         self.permalink = data.get('permalink')  # (str)
         self.priority = data.get('priority')  # (str)
         self.followed_by_me = data.get('followedByMe')  # (bool)
@@ -704,9 +814,7 @@ class Task(PrykeObject):
         Returns:
             Account or None
         """
-        if self.account_id is not None:
-            return self.instance.account(self.account_id)
-        return None
+        return self.instance.account(self.account_id)
 
     @property
     def author(self):
@@ -720,14 +828,15 @@ class Task(PrykeObject):
             self._author = self.instance.user(self.author_ids[0])
         return self._author
 
-
     def attachments(self):
         """
         All Attachments of the task.
-        https://developers.wrike.com/documentation/api/methods/get-attachments#get-tasks-single-attachments
 
         Yields:
-            Attachment
+            :class:`Attachment`
+
+        See Also:
+            https://developers.wrike.com/documentation/api/methods/get-attachments#get-tasks-single-attachments
         """
         # TODO: add versions, createdDate, and withUrls parameters
         r = self.get("tasks/{}/attachments".format(self.id))
@@ -758,7 +867,7 @@ class Task(PrykeObject):
             path (str): Fully-qualified path to the export file.
 
         Returns:
-            bool
+            bool: True if file was saved
         """
         template = self.instance.templates.get_template("task.html")
         with open(path, "w") as export_file:
