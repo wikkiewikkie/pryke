@@ -6,6 +6,8 @@ import datetime
 import requests
 import time
 
+__version__ = "0.0.1"
+
 
 class Pryke:
     """
@@ -46,7 +48,12 @@ class Pryke:
 
         self.templates = Environment(loader=PackageLoader("pryke", "templates"))
 
-    def get(self, path, params={}, delay=None):
+        self.headers = requests.utils.default_headers()
+        self.headers.update({
+            'User-Agent': 'Pryke/{} (+https://github.com/wikkiewikkie/pryke)'.format(__version__)
+        })
+
+    def get(self, path, params={}, delay=None, headers=None):
         """
         Dispatch GET request and return response.  Throttles back exponentially if API returns status codes 429 or 503
 
@@ -70,10 +77,13 @@ class Pryke:
         if self.endpoint not in path:
             path = "{}{}".format(self.endpoint, path)
 
-        self._response = self.oauth.get(path, params=params)
+        if headers is None:
+            headers = self.headers
+
+        self._response = self.oauth.get(path, params=params, headers=headers)
 
         if self._response.status_code in [429, 503]:
-            return self.get(path, params=params, delay=delay or 1)
+            return self.get(path, params=params, delay=delay or 1, headers=headers)
 
         return self._response
 

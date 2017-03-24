@@ -1,5 +1,5 @@
 from tests import add_response
-from pryke import Account, Attachment, Comment, Contact, Folder, Group, Task, User
+from pryke import __version__, Account, Attachment, Comment, Contact, Folder, Group, Task, User
 from urllib.parse import urlparse
 
 import datetime
@@ -119,6 +119,8 @@ def test_pryke_get(pryke):
         assert 32 > time.perf_counter()-start > 28  # should throttle for ~30 seconds
         assert r.status_code == 200  # eventually succeeds
         assert "?dog=bone" in r.request.url  # params are passed still
+        assert "Pryke" in r.request.headers['User-Agent']
+        assert __version__ in r.request.headers['User-Agent']
 
 
 @responses.activate
