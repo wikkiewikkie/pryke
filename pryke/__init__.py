@@ -3,6 +3,8 @@ from jinja2 import Environment, PackageLoader
 from requests_oauthlib import OAuth2Session
 
 import datetime
+import requests
+import time
 
 
 class Pryke:
@@ -44,19 +46,35 @@ class Pryke:
 
         self.templates = Environment(loader=PackageLoader("pryke", "templates"))
 
-    def get(self, path, params={}):
+    def get(self, path, params={}, delay=None):
         """
-        Dispatch GET request and return response.
+        Dispatch GET request and return response.  Throttles back exponentially if API returns status codes 429 or 503
 
         Args:
             path (str): relative path to get.
             params (dict):  dictionary of request parameters.
+            delay (int):  Seconds to wait before dispatching request; used to throttle
 
         Returns:
             requests.Response: Response
+
+        See Also:
+            Question no. 8 regarding rate limits
+            https://developers.wrike.com/faq/
         """
-        # TODO: rate limiter per https://developers.wrike.com/faq/  Question No. 8
-        self._response = self.oauth.get("{}{}".format(self.endpoint, path), params=params)
+        if delay is not None:
+            delay **= 2
+            time.sleep(delay)
+            delay += 1
+
+        if self.endpoint not in path:
+            path = "{}{}".format(self.endpoint, path)
+
+        self._response = self.oauth.get(path, params=params)
+
+        if self._response.status_code in [429, 503]:
+            return self.get(path, params=params, delay=delay or 1)
+
         return self._response
 
     def account(self, account_id):
@@ -262,8 +280,21 @@ class Pryke:
 
 
 class PrykeObject:
+    """
+    Generic Pryke Object
 
+    Attributes:
+        self.instance (:class:`Pryke`): API Client Instance
+        self._date_fields (list):  List of fields to treat as dates
+    """
     def __init__(self, instance, data={}):
+        """
+        Inits Object
+
+        Args:
+            instance (:class:`Pryke`): API Client Instance
+            data (dict): Data received from API client
+        """
         self.instance = instance
 
         self._data = data
@@ -271,8 +302,10 @@ class PrykeObject:
 
     def _format_dates(self):
         """
-        Format date strings to python datetimes
-        :return:
+        Format date strings to python datetime
+
+        Returns:
+            bool: True is successful
         """
         for date_field in self._date_fields:
             current_value = getattr(self, date_field)
@@ -282,12 +315,22 @@ class PrykeObject:
         return True
 
     def get(self, path, params={}):
+        """
+        Convenience method for executing a GET request
+
+        Args:
+            path (str):
+            params (dict):
+
+        Returns:
+
+        """
         return self.instance.get(path, params=params)
 
 
 class Account(PrykeObject):
     """
-    Wrike Account.
+    Wrike Account
 
     Attributes:
         id (str):  Unique identifier for account
@@ -297,17 +340,24 @@ class Account(PrykeObject):
         work_days (list):  List of weekdays, not empty. These days are used in task duration computation
         root_folder_id (str):  Identifier for root folder
         recycle_bin_id (str):  Identifier for recycle bin
+        created_date (datetime.datetime): Registration date
+        subscription: Account subscription; Optional
+        metadata (list):  Optional
+        custom_fields (list): custom fields accessible for requesting user in the account
+        joined_date (datetime.datetime): Date when the user has joined the account
 
     See Also:
         https://developers.wrike.com/documentation/api/methods/accounts
     """
     def __init__(self, instance, data={}):
         """
-        Inits Account.
+        Inits Account
 
         Args:
-            instance (Pryke):  An API client instance.
-            data (dict): Data to populate object attributes.
+            instance (:class:`Pryke`):  An API client instance
+
+        Keyword Args:
+            data (dict): Data to populate object attributes
         """
         super().__init__(instance, data)
 
@@ -444,6 +494,10 @@ class Attachment(PrykeObject):
         task_id (str): ID of related task
         folder_id (str): ID of related folder
         comment_id (str): ID of related comment
+        current_attachment_id (str): ID of current attachment version
+        preview_url (str): Link to download external attachment preview
+        url (str): Link to download attachment
+        review_ids (list): Review IDs
 
     See Also:
         https://developers.wrike.com/documentation/api/methods/attachments
@@ -453,7 +507,7 @@ class Attachment(PrykeObject):
         Inits attachment
 
         Args:
-            instance (Pryke): Current Pryke instance.
+            instance (:class:`Pryke`): Current Pryke instance.
 
         Keyword Args:
             data (dict):  Attributes to populate.
@@ -471,7 +525,10 @@ class Attachment(PrykeObject):
         self.task_id = data.get('taskId')
         self.folder_id = data.get('folderId')
         self.comment_id = data.get('commentId')
-        # TODO: more fields
+        self.current_attachment_id = data.get('currentAttachmentId')
+        self.preview_url = data.get('previewUrl')
+        self.url = data.get('url')
+        self.review_ids = data.get('reviewIds')
 
         self._author = None
         self._task = None
@@ -491,6 +548,26 @@ class Attachment(PrykeObject):
             self._author = self.instance.user(self.author_id)
         return self._author
 
+    def download(self, path):
+        """
+        Downloads the attachment to the specified path
+
+        Args:
+            path (str):  Fully-qualified path where attachment should be saved
+
+        Returns:
+            bool: True if successful, False on failure
+        """
+        if self.url is None:
+            return False
+        with open(path, "wb") as output_file:
+            if self.type == AttachmentType.WRIKE:
+                r = self.get(self.url)
+            else:
+                r = requests.get(self.url)
+            output_file.write(r.content)
+        return True
+
     @property
     def task(self):
         """
@@ -507,11 +584,11 @@ class Attachment(PrykeObject):
 @unique
 class AttachmentType(Enum):
 
-    box = "Box"
-    drop_box = "DropBox"
-    google = "Google"
-    one_drive = "OneDrive"
-    wrike = "Wrike"  # Attachment file content stored in Wrike.
+    BOX = "Box"
+    DROP_BOX = "DropBox"
+    GOOGLE = "Google"
+    ONE_DRIVE = "OneDrive"
+    WRIKE = "Wrike"  # Attachment file content stored in Wrike.
 
 
 class Comment(PrykeObject):
@@ -535,7 +612,7 @@ class Comment(PrykeObject):
         Inits comment
 
         Args:
-            instance (Pryke): Current Pryke instance
+            instance (:class:`Pryke`): Current Pryke instance
             data (dict): Data from API
         """
         super().__init__(instance, data)

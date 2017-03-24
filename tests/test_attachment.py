@@ -16,6 +16,16 @@ def test_attachment_author(attachment):
     assert attachment.author.id == "KUAJ25LD"
 
 
+def test_attachment_download(attachment):
+    """
+    task method of Attachment object.
+
+    Args:
+        attachment (pryke.Attachment):  Attachment to test.
+    """
+    assert not attachment.download("somepath")
+
+
 @responses.activate
 def test_attachment_task(attachment):
     """

@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 
 import datetime
 import responses
+import time
 
 
 @responses.activate
@@ -97,6 +98,27 @@ def test_pryke_folders(pryke):
     for folder in pryke.folders():
         assert isinstance(folder, Folder)
     assert folder.id == "IEAGIITRI4AYHYMV"
+
+
+def test_pryke_get(pryke):
+    with responses.RequestsMock(assert_all_requests_are_fired=True) as rsps:
+        rsps.add(responses.GET, "https://www.wrike.com/api/v3/folders", body="{}", status=200,
+                      content_type="application/json")
+        rsps.add(responses.GET, "https://www.wrike.com/api/v3/tasks", body="{}", status=429,
+                      content_type="application/json")
+        rsps.add(responses.GET, "https://www.wrike.com/api/v3/tasks", body="{}", status=429,
+                      content_type="application/json")
+        rsps.add(responses.GET, "https://www.wrike.com/api/v3/tasks", body="{}", status=429,
+                      content_type="application/json")
+        rsps.add(responses.GET, "https://www.wrike.com/api/v3/tasks", body="{}", status=200,
+                      content_type="application/json")
+        r = pryke.get("folders", params={"cat": "mouse"})
+        assert "?cat=mouse" in r.request.url  # params are passed
+        start = time.perf_counter()
+        r = pryke.get("tasks", params={"dog": "bone"})
+        assert 32 > time.perf_counter()-start > 28  # should throttle for ~30 seconds
+        assert r.status_code == 200  # eventually succeeds
+        assert "?dog=bone" in r.request.url  # params are passed still
 
 
 @responses.activate

@@ -16,7 +16,7 @@ def test_account_attachments(account):
 
     assert isinstance(attachment.created_date, datetime.datetime)
     assert isinstance(attachment.size, int)
-    assert attachment.type == AttachmentType.wrike
+    assert attachment.type == AttachmentType.WRIKE
 
 
 @responses.activate
